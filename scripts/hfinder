@@ -5,23 +5,22 @@
 # This is open-source software licensed under a BSD license.
 # Please see the file LICENSE.txt for details.
 #
-from __future__ import print_function
+from __future__ import print_function, absolute_import, unicode_literals, division
 
-import sys, os
 import logging
 import tkinter as tk
 from tkinter.filedialog import askopenfilename
 
 from ginga import AstroImage
-from ginga.util import wcs, dp, catalog
 from ginga.tkw.ImageViewTk import ImageViewCanvas
 
 import hcam_drivers.utils as utils
 from hcam_drivers.globals import Container
 import hcam_drivers.utils.widgets as w
-from hcam_drivers.config import (load_config, write_config,
-                                 check_user_dir, dump_app)
+from hcam_drivers.config import (load_config)
 from hcam_drivers.utils import hcam
+
+from hcam_finder import FovSetter
 
 STD_FORMAT = '%(asctime)s | %(levelname)1.1s | %(filename)s:%(lineno)d (%(funcName)s) | %(message)s'
 
@@ -41,7 +40,6 @@ class FitsViewer(tk.Tk):
         self.globals.cpars['eso_server_online'] = False
         # style
         utils.addStyle(self)
-
 
         # Now we make the HiPERCAM widgets
         # including some widgets that will not be displayed,
@@ -64,7 +62,7 @@ class FitsViewer(tk.Tk):
         self.globals.count = hcam.CountsFrame(self)
 
         # container canvas
-        viewerFrame = tk.Canvas(self, bg="grey", height=512, width=512)
+        viewerFrame = tk.Canvas(self, bg="grey", height=600, width=600)
         # GINGA Image view
         fi = ImageViewCanvas(logger)
         fi.set_widget(viewerFrame)
@@ -72,10 +70,12 @@ class FitsViewer(tk.Tk):
         fi.set_autocut_params('zscale')
         fi.enable_autozoom('on')
         fi.enable_draw(False)
-        fi.set_callback('none-move', self.motion)
+        #fi.set_callback('none-move', self.motion)
         fi.set_bg(0.2, 0.2, 0.2)
         fi.ui_setActive(True)
-        fi.show_pan_mark(False)
+        fi.show_pan_mark(True)
+        fi.show_mode_indicator(True)
+        fi.show_focus_indicator(True)
         self.fitsimage = fi
 
         bd = fi.get_bindings()
@@ -84,25 +84,28 @@ class FitsViewer(tk.Tk):
         # canvas that we will draw on
         DrawingCanvas = fi.getDrawClass('drawingcanvas')
         canvas = DrawingCanvas()
-        canvas.enable_draw(True)
-        #canvas.enable_edit(True)
+        canvas.enable_draw(False)
+        canvas.enable_edit(True)
         canvas.setSurface(fi)
         self.canvas = canvas
         # add canvas to view
         fi.add(canvas)
         canvas.ui_setActive(True)
+        fi.set_desired_size(600, 600)
 
-        fi.configure(512, 512)
+        self.readout = tk.Label(self, text='')
 
-        infoFrame = tk.Frame(self)
-        self.readout = tk.Label(infoFrame, text='')
+        # target widget
+        self.target = FovSetter(self, self.fitsimage, canvas, logger)
 
         # now layout
-        self.globals.ipars.grid(row=0, column=0, sticky=tk.W+tk.N, padx=10, pady=10)
+        self.target.grid(row=0, column=0, sticky=tk.W+tk.N, padx=10, pady=10)
         self.globals.count.grid(row=1, column=0, sticky=tk.W+tk.N, padx=10, pady=10)
+        self.globals.ipars.grid(row=2, column=0, sticky=tk.W+tk.N, padx=10, pady=10,
+                                rowspan=2)
         viewerFrame.grid(row=0, column=1, sticky=tk.W+tk.N, padx=10, pady=10,
                          rowspan=3)
-        infoFrame.grid(row=4, column=1, sticky=tk.W+tk.N, padx=10, pady=10)
+        self.readout.grid(row=3, column=1, sticky=tk.W+tk.N, padx=10, pady=10)
 
         # configure
         self.title('hfinder')
@@ -114,22 +117,6 @@ class FitsViewer(tk.Tk):
 
     def get_widget(self):
         return self
-
-    def set_drawparams(self, evt):
-        kind = self.wdrawtype.get()
-        color = self.wdrawcolor.get()
-        alpha = 0.4
-        fill = True
-
-        params = {'color': color,
-                  'alpha': alpha,
-                  }
-        if kind in ('circle', 'rectangle', 'polygon', 'triangle',
-                    'righttriangle', 'ellipse', 'square', 'box'):
-            params['fill'] = fill
-            params['fillalpha'] = alpha
-
-        self.canvas.set_drawtype(kind, **params)
 
     def clear_canvas(self):
         self.canvas.deleteAllObjects()
@@ -190,7 +177,6 @@ def main():
     logger.addHandler(stderrHdlr)
 
     fv = FitsViewer(logger)
-    fv.open_file()
     top = fv.get_widget()
     top.mainloop()
 
