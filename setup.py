@@ -2,6 +2,8 @@
 # -*- coding: utf-8 -*-
 
 from setuptools import setup
+import glob
+import os
 
 with open('README.rst') as readme_file:
     readme = readme_file.read()
@@ -17,6 +19,10 @@ test_requirements = [
     # TODO: put package test requirements here
 ]
 
+# Treat everything in scripts except README.rst as a script to be installed
+scripts = [fname for fname in glob.glob(os.path.join('scripts', '*'))
+           if os.path.basename(fname) != 'README.rst']
+
 setup(
     name='hcam_finder',
     version='0.1.0',
@@ -31,6 +37,7 @@ setup(
     package_dir={'hcam_finder':
                  'hcam_finder'},
     include_package_data=True,
+    scripts=scripts,
     install_requires=requirements,
     license="MIT license",
     zip_safe=False,
