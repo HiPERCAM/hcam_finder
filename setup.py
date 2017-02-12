@@ -12,7 +12,9 @@ with open('HISTORY.rst') as history_file:
     history = history_file.read()
 
 requirements = [
-    # TODO: put package requirements here
+    'ginga',
+    'astropy',
+    'hcam_drivers'
 ]
 
 test_requirements = [
@@ -36,6 +38,7 @@ setup(
     ],
     package_dir={'hcam_finder':
                  'hcam_finder'},
+    package_data = {'hcam_finder': ['data/*']},
     include_package_data=True,
     scripts=scripts,
     install_requires=requirements,

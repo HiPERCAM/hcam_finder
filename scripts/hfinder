@@ -17,9 +17,10 @@ from ginga.tkw.ImageViewTk import ImageViewCanvas
 import hcam_drivers.utils as utils
 from hcam_drivers.globals import Container
 import hcam_drivers.utils.widgets as w
-from hcam_drivers.config import (load_config)
 from hcam_drivers.utils import hcam
 
+from hcam_finder.config import (load_config, write_config,
+                                check_user_dir)
 from hcam_finder import FovSetter
 
 STD_FORMAT = '%(asctime)s | %(levelname)1.1s | %(filename)s:%(lineno)d (%(funcName)s) | %(message)s'
@@ -38,6 +39,10 @@ class FitsViewer(tk.Tk):
         self.globals.cpars['file_logging_on'] = 0
         self.globals.cpars['hcam_server_on'] = 0
         self.globals.cpars['eso_server_online'] = False
+
+        # make sure we've got a user dir to read/store configs from
+        check_user_dir(self.globals)
+
         # style
         utils.addStyle(self)
 
@@ -163,6 +168,7 @@ class FitsViewer(tk.Tk):
         self.readout.config(text=text)
 
     def quit(self):
+        write_config(self.globals)
         self.destroy()
         return True
 
