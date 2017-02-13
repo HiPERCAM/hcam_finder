@@ -14,6 +14,7 @@ with open('HISTORY.rst') as history_file:
 requirements = [
     'ginga',
     'astropy',
+    'pillow',
     'hcam_drivers'
 ]
 

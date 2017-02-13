@@ -3,15 +3,15 @@ from __future__ import print_function, absolute_import, unicode_literals, divisi
 import tempfile
 import threading
 import os
-from itertools import product
 
 import tkinter as tk
-from ginga.util import catalog, dp
-from ginga.canvas.types.all import (Box, Polygon,
+from ginga.util import catalog, dp, wcs
+from ginga.canvas.types.all import (Path, Polygon,
                                     CompoundObject)
 from astropy import units as u
 from astropy.coordinates import SkyCoord, Angle
 from astropy.coordinates.name_resolve import NameResolveError
+from astropy.vo.client import conesearch
 
 import hcam_drivers.utils.widgets as w
 from hcam_drivers.utils import get_root
@@ -23,27 +23,45 @@ image_archives = [('ESO', 'eso', catalog.ImageServer,
                   ]
 
 
+@u.quantity_input(px_val=u.pix)
+@u.quantity_input(px_scale=u.arcsec/u.pix)
+def _px_deg(px_val, px_scale):
+    """
+    convert from pixels to degrees
+    """
+    return px_val.to(
+        u.deg,
+        equivalencies=u.pixel_scale(px_scale)
+    ).value
+
+
 class CCDWin(Polygon):
-    def __init__(self, ctr_x, ctr_y, xs, ys, **params):
+    def __init__(self, ra_ll_deg, dec_ll_deg, xs, ys,
+                 image, **params):
         """
         Shape for drawing ccd window
 
         Parameters
         ----------
-        ctr_x : float
-            x centre in image pixels
-        ctr_y : float
-            y centre in image pixels
+        ra_ll_deg : float
+            lower left coordinate in ra (deg)
+        dec_ll_deg : float
+            lower left y coord in dec (deg)
         xs : float
-            x size in image pixels
+            x size in degrees
         ys : float
-            y size in image pixels
+            y size in degrees
+        image : `~ginga.AstroImage`
+            image to plot Window on
         """
-        points = ((ctr_x - xs/2, ctr_y - xs/2),
-                  (ctr_x + xs/2, ctr_y - xs/2),
-                  (ctr_x + xs/2, ctr_y + xs/2),
-                  (ctr_x - xs/2, ctr_y + xs/2))
-        super(CCDWin, self).__init__(points, **params)
+        points_wcs = (
+            (ra_ll_deg, dec_ll_deg),
+            wcs.add_offset_radec(ra_ll_deg, dec_ll_deg, xs, 0.0),
+            wcs.add_offset_radec(ra_ll_deg, dec_ll_deg, xs, ys),
+            wcs.add_offset_radec(ra_ll_deg, dec_ll_deg, 0.0, ys)
+        )
+        self.points = [image.radectopix(ra, dec) for (ra, dec) in points_wcs]
+        super(CCDWin, self).__init__(self.points, **params)
 
 
 class Sexagesimal(tk.Frame):
@@ -99,6 +117,23 @@ class FovSetter(tk.LabelFrame):
                                         text='Object')
 
         g = get_root(self).globals
+
+        # TODO: read these values in from config
+        self.px_scale = g.cpars['px_scale']
+        self.nxtot = g.cpars['nxtot']
+        self.nytot = g.cpars['nytot']
+        self.fov_x = _px_deg(self.nxtot, self.px_scale)
+        self.fov_y = _px_deg(self.nytot, self.px_scale)
+
+        # rotator centre position in pixels
+        self.rotcen_x = g.cpars['rotcen_x']
+        self.rotcen_y = g.cpars['rotcen_y']
+        # is image flipped E-W?
+        self.flipEW = g.cpars['flipEW']
+        # does increasing PA rotate towards east from north?
+        self.EofN = g.cpars['EofN']
+        # rotator position in degrees when chip runs N-S
+        self.paOff = g.cpars['paOff']
 
         row = 0
         column = 0
@@ -158,8 +193,6 @@ class FovSetter(tk.LabelFrame):
         self.imfilepath = None
         self.logger = logger
 
-        self.fov = (10*u.arcmin).to(u.deg).value
-
         # Add our image servers
         self.bank = catalog.ServerBank(self.logger)
         for (longname, shortname, klass, url, description) in image_archives:
@@ -167,6 +200,15 @@ class FovSetter(tk.LabelFrame):
             self.bank.addImageServer(obj)
         self.servername = 'eso'
         self.tmpdir = tempfile.mkdtemp()
+
+        # catalog servers
+        for longname in conesearch.list_catalogs():
+            shortname = longname
+            url = ""    # astropy conesearch doesn't need URL
+            description = longname
+            obj = catalog.AstroPyCatalogServer(logger, longname, shortname,
+                                               url, description)
+            self.bank.addCatalogServer(obj)
 
         # canvas that we will draw on
         self.canvas = canvas
@@ -191,43 +233,120 @@ class FovSetter(tk.LabelFrame):
         self.targCoords.set(coo.to_string(style='hmsdms', sep=':'))
 
     def update_info_cb(self, *args):
-        print(args)
         self.draw_ccd(*args)
 
+    def _chip_cen(self):
+        """
+        return chip centre in ra, dec
+        """
+        xoff_hpix = (self.nxtot/2 - self.rotcen_x)
+        yoff_hpix = (self.nytot/2 - self.rotcen_y)
+        yoff_deg = _px_deg(yoff_hpix, self.px_scale)
+        xoff_deg = _px_deg(xoff_hpix, self.px_scale)
+
+        if not self.flipEW:
+            xoff_deg *= -1
+
+        return wcs.add_offset_radec(self.ctr_ra_deg, self.ctr_dec_deg,
+                                    xoff_deg, yoff_deg)
+
+    def _make_win(self, xs, ys, nx, ny, image, **params):
+        """
+        Make a canvas object to represent a CCD window
+
+        Parameters
+        ----------
+        xs, ys, nx, ny : float
+            xstart, ystart and size in instr pixels
+        image : `~ginga.AstroImage`
+            image reference for calculating scales
+        params : dict
+            parameters passed straight through to canvas object
+        Returns
+        -------
+        win : `~ginga.canvas.CompoundObject`
+            ginga canvas object to draw on FoV
+        """
+        # need bottom left coord and xy size of window in degrees
+        # offset of bottom left coord window from chip ctr in degrees
+        xoff_hpix = (xs*u.pix - self.rotcen_x)
+        yoff_hpix = (ys*u.pix - self.rotcen_y)
+        yoff_deg = _px_deg(yoff_hpix, self.px_scale)
+        xoff_deg = _px_deg(xoff_hpix, self.px_scale)
+
+        if not self.flipEW:
+            xoff_deg *= -1
+
+        ll_ra, ll_dec = wcs.add_offset_radec(self.ctr_ra_deg, self.ctr_dec_deg,
+                                             xoff_deg, yoff_deg)
+        xsize_deg = _px_deg(nx*u.pix, self.px_scale)
+        ysize_deg = _px_deg(ny*u.pix, self.px_scale)
+        if not self.flipEW:
+            xsize_deg *= -1
+        return CCDWin(ll_ra, ll_dec, xsize_deg, ysize_deg, image, **params)
+
+    def _make_ccd(self, image):
+        """
+        Converts the current instrument settings to a ginga canvas object
+        """
+        # get window pair object from top widget
+        g = get_root(self).globals
+        wpairs = g.ipars.wframe
+
+        # all values in pixel coords of the FITS frame
+        # get centre
+        ctr_x, ctr_y = image.radectopix(self.ctr_ra_deg, self.ctr_dec_deg)
+        self.ctr_x, self.ctr_y = ctr_x, ctr_y
+
+        nx, ny = self.nxtot.value, self.nytot.value
+        mainCCD = self._make_win(0, 0, nx, ny, image,
+                                 fill=True, fillcolor='blue',
+                                 fillalpha=0.3)
+
+        # dashed lines to mark quadrants of CCD
+        chip_ctr_ra, chip_ctr_dec = self._chip_cen()
+        xright, ytop = wcs.add_offset_radec(chip_ctr_ra, chip_ctr_dec,
+                                            self.fov_x/2, self.fov_y/2)
+        xleft, ybot = wcs.add_offset_radec(chip_ctr_ra, chip_ctr_dec,
+                                           -self.fov_x/2, -self.fov_y/2)
+        points = (image.radectopix(ra, dec) for (ra, dec) in (
+            (chip_ctr_ra, ybot), (chip_ctr_ra, ytop)
+        ))
+        hline = Path(points, color='red', linestyle='dash', linewidth=2)
+        points = (image.radectopix(ra, dec) for (ra, dec) in (
+            (xleft, chip_ctr_dec), (xright, chip_ctr_dec)
+        ))
+        vline = Path(points, color='red', linestyle='dash', linewidth=2)
+
+        # list of objects for compound object
+        l = [mainCCD, hline, vline]
+
+        # iterate over window pairs
+        # these coords in ccd pixel vaues
+        params = dict(fill=True, fillcolor='red', fillalpha=0.3)
+        if not g.ipars.isFF():
+            for xsl, xsr, ys, nx, ny in wpairs:
+                l.append(self._make_win(xsl, ys, nx, ny, image, **params))
+                l.append(self._make_win(xsr, ys, nx, ny, image, **params))
+
+        obj = CompoundObject(*l)
+        obj.editable = True
+        return obj
+
     def draw_ccd(self, *args):
+        image = self.fitsimage.get_image()
+        if image is None:
+            return
         try:
-            print(self.canvas.get_draw_mode())
-            image = self.fitsimage.get_image()
-            if image is None:
-                return
-
-            ctr_x, ctr_y = image.radectopix(self.ctr_ra_deg, self.ctr_dec_deg)
-            self.ctr_x, self.ctr_y = ctr_x, ctr_y
-
-            # list of things to draw
-            l = []
-            delta_pix = image.calc_radius_xy(ctr_x, ctr_y,
-                                             self.fov/2)
-            mainCCD = CCDWin(ctr_x, ctr_y, delta_pix, delta_pix,
-                             fill=True, fillcolor='blue', fillalpha=0.5)
-            l.append(mainCCD)
-
-            obj = CompoundObject(*l)
-            obj.editable = True
-
-            pa = -self.pa.value()
+            obj = self._make_ccd(image)
+            pa = self.pa.value()
+            if not self.EofN:
+                pa *= -1
             self.canvas.deleteObjectByTag('ccd_overlay')
             self.canvas.add(obj, tag='ccd_overlay', redraw=False)
+            # rotate
+            obj.rotate(pa, self.ctr_x, self.ctr_y)
 
-            #print(obj.get_reference_pt())
-            #print(ctr_x, ctr_y)
-            #print(obj.get_data_points())
-            obj.rotate_by(pa)
-            #print(obj.get_reference_pt())
-            #print(ctr_x, ctr_y)
-            #print(obj.get_data_points())
-
-            self.ccd_overlay = obj
             self.canvas.update_canvas()
             self.canvas.set_draw_mode('edit')
         except Exception as err:
@@ -238,7 +357,7 @@ class FovSetter(tk.LabelFrame):
         self.fitsimage.onscreen_message("Creating blank field...",
                                         delay=1.0)
         image = dp.create_blank_image(self.ctr_ra_deg, self.ctr_dec_deg,
-                                      3*self.fov,
+                                      2*self.fov,
                                       0.000047, 0.0,
                                       cdbase=[-1, 1],
                                       logger=self.logger)
@@ -282,7 +401,7 @@ class FovSetter(tk.LabelFrame):
 
     def _load_image(self):
         try:
-            fov_deg = 3*self.fov
+            fov_deg = 2*max(self.fov_x, self.fov_y)
             ra_txt = self.ra.as_string()
             dec_txt = self.dec.as_string()
             # width and height are specified in arcmin
