@@ -47,20 +47,6 @@ class FitsViewer(tk.Tk):
         # style
         utils.addStyle(self)
 
-        # TODO: read these values in from config
-        self.globals.cpars['px_scale'] = 0.33*u.arcsec/u.pix
-        self.globals.cpars['nxtot'] = 2048*u.pix
-        self.globals.cpars['nytot'] = 1024*u.pix
-        # rotator centre position in pixels
-        self.globals.cpars['rotcen_x'] = 1024*u.pix
-        self.globals.cpars['rotcen_y'] = 256*u.pix
-        # is image flipped E-W?
-        self.globals.cpars['flipEW'] = False
-        # does increasing PA rotate towards east from north?
-        self.globals.cpars['EofN'] = True
-        # rotator position in degrees when chip runs N-S
-        self.globals.cpars['paOff'] = 0.0
-
         # Now we make the HiPERCAM widgets
         # including some widgets that will not be displayed,
         # because the hipercam widgets want to talk to them.
@@ -97,7 +83,8 @@ class FitsViewer(tk.Tk):
         fi.show_pan_mark(True)
         fi.show_mode_indicator(True)
         fi.show_focus_indicator(True)
-        if self.globals.cpars['flipEW']:
+        telins = self.globals.cpars['telins_name']
+        if self.globals.cpars[telins]['flipEW']:
             fi.t_['flip_x'] = True
         self.fitsimage = fi
 

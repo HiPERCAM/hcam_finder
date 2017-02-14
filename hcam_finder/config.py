@@ -65,7 +65,8 @@ def write_config(g):
     config = configobj.ConfigObj({}, configspec=configspec_file)
     config.update(g.cpars)
     config.filename = os.path.expanduser('~/.hfinder/config')
-    try:
-        config.write()
-    except Exception as err:
-        g.clog.warn("Could not write config file:\n" + str(err))
+    if not os.path.exists(config.filename):
+        try:
+            config.write()
+        except Exception as err:
+            g.clog.warn("Could not write config file:\n" + str(err))

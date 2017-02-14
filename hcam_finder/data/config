@@ -54,3 +54,47 @@ debug = 1
 confirm_on_quit = 0
 # number of degrees from Moon at which to warn
 mdist_warn = 20.0
+
+# ==========================================
+#
+# Telescope pointing parameters - set these up once
+#
+# ===========================================
+[WHT-HICAM]
+px_scale = 0.33
+nxtot = 2048
+nytot = 1024
+rotcen_x = 1024.0
+rotcen_y = 512.0
+# is image flipped E-W?
+flipEW = False
+# does increasing PA rotate towards east from north?
+EofN = True
+# rotator position in degrees when chip runs N-S
+paOff = 0.0
+
+[GTC-HICAM]
+px_scale = 0.33
+nxtot = 2048
+nytot = 1024
+rotcen_x = 1024.0
+rotcen_y = 512.0
+# is image flipped E-W?
+flipEW = False
+# does increasing PA rotate towards east from north?
+EofN = True
+# rotator position in degrees when chip runs N-S
+paOff = 0.0
+
+[TNT-USPEC]
+px_scale = 0.45
+nxtot = 1024
+nytot = 1024
+rotcen_x = 517.0
+rotcen_y = 516.43
+# is image flipped E-W?
+flipEW = True
+# does increasing PA rotate towards east from north?
+EofN = False
+# rotator position in degrees when chip runs N-S
+paOff = 270.0

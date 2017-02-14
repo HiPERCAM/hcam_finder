@@ -117,23 +117,7 @@ class FovSetter(tk.LabelFrame):
                                         text='Object')
 
         g = get_root(self).globals
-
-        # TODO: read these values in from config
-        self.px_scale = g.cpars['px_scale']
-        self.nxtot = g.cpars['nxtot']
-        self.nytot = g.cpars['nytot']
-        self.fov_x = _px_deg(self.nxtot, self.px_scale)
-        self.fov_y = _px_deg(self.nytot, self.px_scale)
-
-        # rotator centre position in pixels
-        self.rotcen_x = g.cpars['rotcen_x']
-        self.rotcen_y = g.cpars['rotcen_y']
-        # is image flipped E-W?
-        self.flipEW = g.cpars['flipEW']
-        # does increasing PA rotate towards east from north?
-        self.EofN = g.cpars['EofN']
-        # rotator position in degrees when chip runs N-S
-        self.paOff = g.cpars['paOff']
+        self.set_telins(g)
 
         row = 0
         column = 0
@@ -212,6 +196,24 @@ class FovSetter(tk.LabelFrame):
 
         # canvas that we will draw on
         self.canvas = canvas
+
+    def set_telins(self, g):
+        telins = g.cpars['telins_name']
+        self.px_scale = g.cpars[telins]['px_scale'] * u.arcsec/u.pix
+        self.nxtot = g.cpars[telins]['nxtot'] * u.pix
+        self.nytot = g.cpars[telins]['nytot'] * u.pix
+        self.fov_x = _px_deg(self.nxtot, self.px_scale)
+        self.fov_y = _px_deg(self.nytot, self.px_scale)
+
+        # rotator centre position in pixels
+        self.rotcen_x = g.cpars[telins]['rotcen_x'] * u.pix
+        self.rotcen_y = g.cpars[telins]['rotcen_y'] * u.pix
+        # is image flipped E-W?
+        self.flipEW = g.cpars[telins]['flipEW']
+        # does increasing PA rotate towards east from north?
+        self.EofN = g.cpars[telins]['EofN']
+        # rotator position in degrees when chip runs N-S
+        self.paOff = g.cpars[telins]['paOff']
 
     @property
     def ctr_ra_deg(self):
