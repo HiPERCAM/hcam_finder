@@ -341,7 +341,7 @@ class FovSetter(tk.LabelFrame):
             return
         try:
             obj = self._make_ccd(image)
-            pa = self.pa.value()
+            pa = self.pa.value() - self.paOff
             if not self.EofN:
                 pa *= -1
             self.canvas.deleteObjectByTag('ccd_overlay')
