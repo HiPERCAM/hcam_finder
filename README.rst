@@ -20,21 +20,29 @@ hcam-finder
 
 Observation planning and finding charts for HiPerCAM
 
+``hcam_finder`` provides a Python script ``hfinder`` for generating finding
+charts for HiPerCAM on the WHT and GTC. ``hcam_finder`` is written in Python and is based on TKinter. It should be
+compatible with Python2 and Python3.
+
+Installation
+------------
+
+The software is written as much as possible to make use of core Python
+components. It requires my own `hcam_drivers <https://github.com/StuartLittlefair/hcam-drivers>`_ module.
+It also relies on the third party libraries `astropy <http://astropy.org/>`_ for astronomical
+calculations and catalog lookup, as well as `ginga <https://ginga.readthedocs.io/en/latest/>`_ for
+image display.
+
+Once you have installed these, install with the usual::
+
+ python setup.py install
+
+or if you don't have root access::
+
+ python setup.py install --prefix=my_own_installation_directory
 
 * Free software: MIT license
 * Documentation: https://hcam-finder.readthedocs.io.
 
 
-Features
---------
-
-* TODO
-
-Credits
----------
-
-This package was created with Cookiecutter_ and the `audreyr/cookiecutter-pypackage`_ project template.
-
-.. _Cookiecutter: https://github.com/audreyr/cookiecutter
-.. _`audreyr/cookiecutter-pypackage`: https://github.com/audreyr/cookiecutter-pypackage
 
