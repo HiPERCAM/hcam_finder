@@ -85,7 +85,6 @@ class FitsViewer(tk.Tk):
         fi.show_pan_mark(True)
         fi.show_mode_indicator(True)
         fi.show_focus_indicator(False)
-        fi.edit_follows_draw = True
 
         telins = self.globals.cpars['telins_name']
         if self.globals.cpars[telins]['flipEW']:
@@ -105,25 +104,13 @@ class FitsViewer(tk.Tk):
             pass
         bd._orient = no_orient
 
-        # canvas that we will draw on
-        DrawingCanvas = fi.getDrawClass('drawingcanvas')
-        canvas = DrawingCanvas()
-        canvas.enable_draw(True)
-        canvas.enable_edit(True)
-        canvas.setSurface(fi)
-        canvas.set_drawtype('ruler')
-        canvas.edit_follows_draw = True
-        self.canvas = canvas
-
-        # add canvas to view
-        fi.add(canvas)
-        canvas.ui_setActive(True)
         fi.set_desired_size(600, 600)
 
         self.readout = tk.Label(self, text='')
 
         # target widget
-        self.target = FovSetter(self, self.fitsimage, canvas, logger)
+        self.target = FovSetter(self, self.fitsimage, logger)
+        fi.set_callback('edit-event', self.target.edit_cb)
 
         # add additional callback to instpars widgets to redraw CCD on change
         widgets_to_fix = [self.globals.ipars.app,
@@ -174,9 +161,6 @@ class FitsViewer(tk.Tk):
 
     def get_widget(self):
         return self
-
-    def clear_canvas(self):
-        self.canvas.deleteAllObjects()
 
     def load_file(self, filepath):
         self.update()

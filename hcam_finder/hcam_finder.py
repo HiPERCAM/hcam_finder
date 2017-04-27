@@ -109,7 +109,7 @@ class Sexagesimal(tk.Frame):
 
 class FovSetter(tk.LabelFrame):
 
-    def __init__(self, master, fitsimage, canvas, logger):
+    def __init__(self, master, fitsimage, logger):
         """
         fitsimage is reverence to ImageViewCanvas
         """
@@ -195,7 +195,7 @@ class FovSetter(tk.LabelFrame):
             self.bank.addCatalogServer(obj)
 
         # canvas that we will draw on
-        self.canvas = canvas
+        self.canvas = fitsimage.canvas
 
     def set_telins(self, g):
         telins = g.cpars['telins_name']
@@ -355,12 +355,19 @@ class FovSetter(tk.LabelFrame):
             self.canvas.add(obj, tag='ccd_overlay', redraw=False)
             # rotate
             obj.rotate(pa, self.ctr_x, self.ctr_y)
-
+            obj.color = 'red'
+            obj.cap = 'cross'
             self.canvas.update_canvas()
+            self.fitsimage.set_draw_mode('edit')
+            self.canvas.edit_select(obj)
 
         except Exception as err:
             errmsg = "failed to draw CCD: {}".format(str(err))
             self.logger.error(msg=errmsg)
+
+    def edit_cb(self, canvas, obj):
+        print(obj)
+        return True
 
     def create_blank_image(self):
         self.fitsimage.onscreen_message("Creating blank field...",
