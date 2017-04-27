@@ -293,7 +293,7 @@ class FovSetter(tk.LabelFrame):
         """
         # get window pair object from top widget
         g = get_root(self).globals
-        wpairs = g.ipars.wframe
+        wframe = g.ipars.wframe
 
         # all values in pixel coords of the FITS frame
         # get centre
@@ -327,9 +327,16 @@ class FovSetter(tk.LabelFrame):
         # these coords in ccd pixel vaues
         params = dict(fill=True, fillcolor='red', fillalpha=0.3)
         if not g.ipars.isFF():
-            for xsl, xsr, ys, nx, ny in wpairs:
-                l.append(self._make_win(xsl, ys, nx, ny, image, **params))
-                l.append(self._make_win(xsr, ys, nx, ny, image, **params))
+            if g.ipars.isDrift():
+                for xsl, xsr, ys, nx, ny in wframe:
+                    l.append(self._make_win(xsl, ys, nx, ny, image, **params))
+                    l.append(self._make_win(xsr, ys, nx, ny, image, **params))
+            else:
+                for xsll, xsul, xslr, xsur, ys, nx, ny in wframe:
+                    l.append(self._make_win(xsll, ys, nx, ny, image, **params))
+                    l.append(self._make_win(xsul, 1024-ys, nx, -ny, image, **params))
+                    l.append(self._make_win(xslr, ys, nx, ny, image, **params))
+                    l.append(self._make_win(xsur, 1024-ys, nx, -ny, image, **params))
 
         obj = CompoundObject(*l)
         obj.editable = True
@@ -350,7 +357,7 @@ class FovSetter(tk.LabelFrame):
             obj.rotate(pa, self.ctr_x, self.ctr_y)
 
             self.canvas.update_canvas()
-            self.canvas.set_draw_mode('edit')
+
         except Exception as err:
             errmsg = "failed to draw CCD: {}".format(str(err))
             self.logger.error(msg=errmsg)
