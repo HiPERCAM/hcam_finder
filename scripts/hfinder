@@ -113,7 +113,6 @@ class FitsViewer(tk.Tk):
         canvas.setSurface(fi)
         canvas.set_drawtype('ruler')
         canvas.edit_follows_draw = True
-        canvas.set_callback('edit-event', lambda x, y: print('hi'))
         self.canvas = canvas
 
         # add canvas to view
