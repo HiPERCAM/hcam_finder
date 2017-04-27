@@ -13,7 +13,6 @@ from tkinter.filedialog import askopenfilename
 
 from ginga import AstroImage
 from ginga.tkw.ImageViewTk import ImageViewCanvas
-from astropy import units as u
 
 import hcam_drivers.utils as utils
 from hcam_drivers.globals import Container
@@ -75,14 +74,19 @@ class FitsViewer(tk.Tk):
         fi.enable_autocuts('on')
         fi.set_autocut_params('zscale')
         fi.enable_autozoom('on')
-        fi.enable_draw(False)
+
+        fi.enable_draw(True)
+        fi.enable_edit(True)
+
         fi.set_callback('none-move', self.motion)
         fi.set_bg(0.2, 0.2, 0.2)
         fi.enable_auto_orient('False')
         fi.ui_setActive(True)
         fi.show_pan_mark(True)
         fi.show_mode_indicator(True)
-        fi.show_focus_indicator(True)
+        fi.show_focus_indicator(False)
+        fi.edit_follows_draw = True
+
         telins = self.globals.cpars['telins_name']
         if self.globals.cpars[telins]['flipEW']:
             fi.t_['flip_x'] = True
@@ -96,13 +100,22 @@ class FitsViewer(tk.Tk):
         bd.enable_cmap(True)
         bd.enable_rotate(True)
 
+        # disable orient binding
+        def no_orient(viewer, righthand, msg):
+            pass
+        bd._orient = no_orient
+
         # canvas that we will draw on
         DrawingCanvas = fi.getDrawClass('drawingcanvas')
         canvas = DrawingCanvas()
-        canvas.enable_draw(False)
+        canvas.enable_draw(True)
         canvas.enable_edit(True)
         canvas.setSurface(fi)
+        canvas.set_drawtype('ruler')
+        canvas.edit_follows_draw = True
+        canvas.set_callback('edit-event', lambda x, y: print('hi'))
         self.canvas = canvas
+
         # add canvas to view
         fi.add(canvas)
         canvas.ui_setActive(True)
@@ -113,14 +126,23 @@ class FitsViewer(tk.Tk):
         # target widget
         self.target = FovSetter(self, self.fitsimage, canvas, logger)
 
-        # add additional callback to instpars widgets
+        # add additional callback to instpars widgets to redraw CCD on change
         widgets_to_fix = [self.globals.ipars.app,
-                          self.globals.ipars.wframe.npair]
-        widgets_to_fix.extend((xsl for xsl in self.globals.ipars.wframe.xsl))
-        widgets_to_fix.extend((xsr for xsr in self.globals.ipars.wframe.xsr))
-        widgets_to_fix.extend((ys for ys in self.globals.ipars.wframe.ys))
-        widgets_to_fix.extend((nx for nx in self.globals.ipars.wframe.nx))
-        widgets_to_fix.extend((ny for ny in self.globals.ipars.wframe.ny))
+                          self.globals.ipars.drift_frame.npair,
+                          self.globals.ipars.quad_frame.nquad]
+        widgets_to_fix.extend((xsl for xsl in self.globals.ipars.drift_frame.xsl))
+        widgets_to_fix.extend((xsr for xsr in self.globals.ipars.drift_frame.xsr))
+        widgets_to_fix.extend((ys for ys in self.globals.ipars.drift_frame.ys))
+        widgets_to_fix.extend((nx for nx in self.globals.ipars.drift_frame.nx))
+        widgets_to_fix.extend((ny for ny in self.globals.ipars.drift_frame.ny))
+
+        widgets_to_fix.extend((xsll for xsll in self.globals.ipars.quad_frame.xsll))
+        widgets_to_fix.extend((xslr for xslr in self.globals.ipars.quad_frame.xslr))
+        widgets_to_fix.extend((xsul for xsul in self.globals.ipars.quad_frame.xsul))
+        widgets_to_fix.extend((xsur for xsur in self.globals.ipars.quad_frame.xsur))
+        widgets_to_fix.extend((ys for ys in self.globals.ipars.quad_frame.ys))
+        widgets_to_fix.extend((nx for nx in self.globals.ipars.quad_frame.nx))
+        widgets_to_fix.extend((ny for ny in self.globals.ipars.quad_frame.ny))
 
         def new_check(*args):
             try:
