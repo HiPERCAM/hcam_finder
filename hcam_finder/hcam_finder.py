@@ -5,6 +5,7 @@ import threading
 import os
 
 import tkinter as tk
+import numpy as np
 from ginga.util import catalog, dp, wcs
 from ginga.canvas.types.all import (Path, Polygon,
                                     CompoundObject)
@@ -12,6 +13,7 @@ from astropy import units as u
 from astropy.coordinates import SkyCoord, Angle
 from astropy.coordinates.name_resolve import NameResolveError
 from astropy.vo.client import conesearch
+from astropy.coordinates import Longitude
 
 import hcam_drivers.utils.widgets as w
 from hcam_drivers.utils import get_root
@@ -62,6 +64,13 @@ class CCDWin(Polygon):
         )
         self.points = [image.radectopix(ra, dec) for (ra, dec) in points_wcs]
         super(CCDWin, self).__init__(self.points, **params)
+        self.name = params.pop('name', 'window')
+
+
+class PABox(w.RangedFloat):
+    def set(self, value):
+        new_val = Longitude(value*u.deg).deg
+        super(PABox, self).set(new_val)
 
 
 class Sexagesimal(tk.Frame):
@@ -155,16 +164,16 @@ class FovSetter(tk.LabelFrame):
         self.launchButton.grid(row=row, column=column, sticky=tk.W)
 
         row += 1
-        self.ra = Sexagesimal(self, callback=self.update_info_cb, unit='hms')
+        self.ra = Sexagesimal(self, callback=self.update_pointing_cb, unit='hms')
         self.ra.grid(row=row, column=column, sticky=tk.W)
 
         row += 1
-        self.dec = Sexagesimal(self, callback=self.update_info_cb, unit='dms')
+        self.dec = Sexagesimal(self, callback=self.update_pointing_cb, unit='dms')
         self.dec.grid(row=row, column=column, sticky=tk.W)
 
         row += 1
-        self.pa = w.RangedFloat(self, 0.0, 0.0, 359.99, self.update_info_cb,
-                                False, True, width=6)
+        self.pa = PABox(self, 0.0, 0.0, 359.99, self.update_rotation_cb,
+                        False, True, width=6)
         self.pa.grid(row=row, column=column, sticky=tk.W)
 
         column += 1
@@ -176,6 +185,13 @@ class FovSetter(tk.LabelFrame):
         self.fitsimage = fitsimage
         self.imfilepath = None
         self.logger = logger
+
+        # add callbacks to fits viewer for dragging FOV around
+        self.fitsimage.canvas.add_callback('cursor-down', self.click_cb)
+        self.fitsimage.canvas.add_callback('cursor-move', self.click_drag_cb)
+        self.fitsimage.canvas.add_callback('cursor-up', self.click_release_cb)
+        self.currently_moving_fov = False
+        self.currently_rotating_fov = False
 
         # Add our image servers
         self.bank = catalog.ServerBank(self.logger)
@@ -197,6 +213,56 @@ class FovSetter(tk.LabelFrame):
         # canvas that we will draw on
         self.canvas = fitsimage.canvas
 
+    def click_cb(self, *args):
+        canvas, event, x, y = args
+        try:
+            obj = self.canvas.get_object_by_tag('ccd_overlay')
+            self.currently_moving_fov = obj.contains(x, y)
+            if self.currently_moving_fov:
+                self.ref_pos_x = x
+                self.ref_pos_y = y
+            else:
+                mainCCD = None
+                for thing in obj.objects:
+                    if thing.name == 'mainCCD':
+                        mainCCD = thing
+                points = np.array(mainCCD.points)
+                ref = np.array((x, y))
+                dists = np.sum(np.sqrt((points-ref)**2), axis=1)
+                if np.any(dists < 20):
+                    self.currently_rotating_fov = True
+                    self.ref_pa = np.degrees(
+                        np.arctan2(y - self.ctr_y, x - self.ctr_x))
+        except Exception as err:
+            errmsg = "failed to draw CCD: {}".format(str(err))
+            self.logger.warn(errmsg)
+
+    def click_drag_cb(self, *args):
+        canvas, event, x, y = args
+        image = self.fitsimage.get_image()
+        if self.currently_moving_fov and image is not None:
+            xoff = x - self.ref_pos_x
+            yoff = y - self.ref_pos_y
+            new_ra, new_dec = image.pixtoradec(self.ctr_x + xoff,
+                                               self.ctr_y + yoff)
+            self.ref_pos_x = x
+            self.ref_pos_y = y
+            # update ra, dec boxes; triggers redraw callback
+            self.ra.set(new_ra)
+            self.dec.set(new_dec)
+        elif self.currently_rotating_fov and image is not None:
+            pa = np.degrees(np.arctan2(y - self.ctr_y, x - self.ctr_x))
+            delta_pa = pa - self.ref_pa
+            if not self.EofN:
+                delta_pa *= -1
+            self.pa.set(self.pa.value() + delta_pa)
+            self.ref_pa = pa
+
+    def click_release_cb(self, *args):
+        canvas, event, x, y = args
+        self.currently_moving_fov = False
+        self.currently_rotating_fov = False
+
     def set_telins(self, g):
         telins = g.cpars['telins_name']
         self.px_scale = g.cpars[telins]['px_scale'] * u.arcsec/u.pix
@@ -214,6 +280,8 @@ class FovSetter(tk.LabelFrame):
         self.EofN = g.cpars[telins]['EofN']
         # rotator position in degrees when chip runs N-S
         self.paOff = g.cpars[telins]['paOff']
+        if hasattr(self, 'fitsimage'):
+            self.draw_ccd()
 
     @property
     def ctr_ra_deg(self):
@@ -234,8 +302,36 @@ class FovSetter(tk.LabelFrame):
         self.targName.config(bg=g.COL['main'])
         self.targCoords.set(coo.to_string(style='hmsdms', sep=':'))
 
-    def update_info_cb(self, *args):
-        self.draw_ccd(*args)
+    def update_pointing_cb(self, *args):
+        image = self.fitsimage.get_image()
+        if image is None:
+            return
+        try:
+            obj = self.canvas.get_object_by_tag('ccd_overlay')
+            ctr_x, ctr_y = image.radectopix(self.ctr_ra_deg, self.ctr_dec_deg)
+            self.ctr_x, self.ctr_y = ctr_x, ctr_y
+            old_x, old_y = image.radectopix(self.ra_as_drawn, self.dec_as_drawn)
+            obj.move_delta(ctr_x - old_x, ctr_y - old_y)
+            self.canvas.update_canvas()
+            self.ra_as_drawn = self.ctr_ra_deg
+            self.dec_as_drawn = self.ctr_dec_deg
+        except:
+            self.draw_ccd(*args)
+
+    def update_rotation_cb(self, *args):
+        image = self.fitsimage.get_image()
+        if image is None:
+            return
+        try:
+            obj = self.canvas.get_object_by_tag('ccd_overlay')
+            pa = self.pa.value() - self.paOff
+            if not self.EofN:
+                pa *= -1
+            obj.rotate(pa - self.pa_as_drawn, self.ctr_x, self.ctr_y)
+            self.canvas.update_canvas()
+            self.pa_as_drawn = pa
+        except:
+            self.draw_ccd(*args)
 
     def _chip_cen(self):
         """
@@ -303,7 +399,7 @@ class FovSetter(tk.LabelFrame):
         nx, ny = self.nxtot.value, self.nytot.value
         mainCCD = self._make_win(0, 0, nx, ny, image,
                                  fill=True, fillcolor='blue',
-                                 fillalpha=0.3)
+                                 fillalpha=0.3, name='mainCCD')
 
         # dashed lines to mark quadrants of CCD
         chip_ctr_ra, chip_ctr_dec = self._chip_cen()
@@ -348,6 +444,7 @@ class FovSetter(tk.LabelFrame):
             return
         try:
             obj = self._make_ccd(image)
+            obj.showcap = True
             pa = self.pa.value() - self.paOff
             if not self.EofN:
                 pa *= -1
@@ -356,18 +453,18 @@ class FovSetter(tk.LabelFrame):
             # rotate
             obj.rotate(pa, self.ctr_x, self.ctr_y)
             obj.color = 'red'
-            obj.cap = 'cross'
+
+            # save old values so we don't have to recompute FOV if we're just moving
+            self.pa_as_drawn = pa
+            self.ra_as_drawn, self.dec_as_drawn = self.ctr_ra_deg, self.ctr_dec_deg
+
             self.canvas.update_canvas()
-            self.fitsimage.set_draw_mode('edit')
-            self.canvas.edit_select(obj)
+            # self.fitsimage.set_draw_mode('edit')
+            # self.canvas.edit_select(obj)
 
         except Exception as err:
             errmsg = "failed to draw CCD: {}".format(str(err))
             self.logger.error(msg=errmsg)
-
-    def edit_cb(self, canvas, obj):
-        print(obj)
-        return True
 
     def create_blank_image(self):
         self.fitsimage.onscreen_message("Creating blank field...",
