@@ -31,15 +31,16 @@ The software is written as much as possible to make use of core Python
 components. It requires my own `hcam_drivers <https://github.com/StuartLittlefair/hcam-drivers>`_ module.
 It also relies on the third party libraries `astropy <http://astropy.org/>`_ for astronomical
 calculations and catalog lookup, as well as `ginga <https://ginga.readthedocs.io/en/latest/>`_ for
-image display.
+image display. Optionally, you can also use `astroquery <https://astroquery.readthedocs.io>`_ to expand
+the range of surveys one can download images from.
 
 Once you have installed these, install with the usual::
 
- python setup.py install
+ pip install .
 
 or if you don't have root access::
 
- python setup.py install --prefix=my_own_installation_directory
+ pip install --user .
 
 * Free software: MIT license
 * Documentation: https://hcam-finder.readthedocs.io.

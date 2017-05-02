@@ -4,8 +4,6 @@ import tempfile
 import threading
 import os
 
-from .skyview import SkyviewImageServer
-
 import tkinter as tk
 import numpy as np
 from ginga.util import catalog, dp, wcs
@@ -20,6 +18,12 @@ from astropy.coordinates import Longitude
 import hcam_drivers.utils.widgets as w
 from hcam_drivers.utils import get_root
 
+has_astroquery = True
+try:
+    from .skyview import SkyviewImageServer
+except:
+    has_astroquery = False
+
 # Image Archives
 image_archives = [('ESO', 'ESO DSS', catalog.ImageServer,
                   "http://archive.eso.org/dss/dss?ra=%(ra)s&dec=%(dec)s&mime-type=application/x-fits&x=%(width)s&y=%(height)s",
@@ -32,26 +36,29 @@ image_archives = [('ESO', 'ESO DSS', catalog.ImageServer,
                    "ESO DSS2 Blue"),
                   ('ESO', 'ESO DSS2 IR', catalog.ImageServer,
                    "http://archive.eso.org/dss/dss?Sky-Survey=DSS2-infrared&ra=%(ra)s&dec=%(dec)s&mime-type=application/x-fits&x=%(width)s&y=%(height)s",
-                   "ESO DSS2 IR"),
-                  ('SDSS', 'SDSS u', SkyviewImageServer,
-                   "SDSSu",
-                   "Skyview SDSS g"),
-                  ('SDSS', 'SDSS g', SkyviewImageServer,
-                   "SDSSg",
-                   "Skyview SDSS g"),
-                  ('SDSS', 'SDSS r', SkyviewImageServer,
-                   "SDSSr",
-                   "Skyview SDSS r"),
-                  ('SDSS', 'SDSS i', SkyviewImageServer,
-                   "SDSSi",
-                   "Skyview SDSS i"),
-                  ('SDSS', 'SDSS z', SkyviewImageServer,
-                   "SDSSz",
-                   "Skyview SDSS z"),
-                  ('2MASS', '2MASS J', SkyviewImageServer,
-                   "2MASS-J",
-                   "Skyview 2MASS J")
-                  ]
+                   "ESO DSS2 IR")]
+
+if has_astroquery:
+    image_archives.extend([
+                    ('SDSS', 'SDSS u', SkyviewImageServer,
+                     "SDSSu",
+                     "Skyview SDSS g"),
+                    ('SDSS', 'SDSS g', SkyviewImageServer,
+                     "SDSSg",
+                     "Skyview SDSS g"),
+                    ('SDSS', 'SDSS r', SkyviewImageServer,
+                     "SDSSr",
+                     "Skyview SDSS r"),
+                    ('SDSS', 'SDSS i', SkyviewImageServer,
+                     "SDSSi",
+                     "Skyview SDSS i"),
+                    ('SDSS', 'SDSS z', SkyviewImageServer,
+                     "SDSSz",
+                     "Skyview SDSS z"),
+                    ('2MASS', '2MASS J', SkyviewImageServer,
+                     "2MASS-J",
+                     "Skyview 2MASS J")
+                    ])
 
 
 @u.quantity_input(px_val=u.pix)
