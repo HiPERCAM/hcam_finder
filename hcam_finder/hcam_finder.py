@@ -4,6 +4,8 @@ import tempfile
 import threading
 import os
 
+from .skyview import SkyviewImageServer
+
 import tkinter as tk
 import numpy as np
 from ginga.util import catalog, dp, wcs
@@ -19,9 +21,36 @@ import hcam_drivers.utils.widgets as w
 from hcam_drivers.utils import get_root
 
 # Image Archives
-image_archives = [('ESO', 'eso', catalog.ImageServer,
+image_archives = [('ESO', 'ESO DSS', catalog.ImageServer,
                   "http://archive.eso.org/dss/dss?ra=%(ra)s&dec=%(dec)s&mime-type=application/x-fits&x=%(width)s&y=%(height)s",
                    "ESO DSS archive"),
+                  ('ESO', 'ESO DSS2 Red', catalog.ImageServer,
+                   "http://archive.eso.org/dss/dss?ra=%(ra)s&dec=%(dec)s&mime-type=application/x-fits&x=%(width)s&y=%(height)s&Sky-Survey=DSS2-red",
+                   "ESO DSS2 Red"),
+                  ('ESO', 'ESO DSS2 Blue', catalog.ImageServer,
+                   "http://archive.eso.org/dss/dss?Sky-Survey=DSS2-blue&ra=%(ra)s&dec=%(dec)s&mime-type=application/x-fits&x=%(width)s&y=%(height)s",
+                   "ESO DSS2 Blue"),
+                  ('ESO', 'ESO DSS2 IR', catalog.ImageServer,
+                   "http://archive.eso.org/dss/dss?Sky-Survey=DSS2-infrared&ra=%(ra)s&dec=%(dec)s&mime-type=application/x-fits&x=%(width)s&y=%(height)s",
+                   "ESO DSS2 IR"),
+                  ('SDSS', 'SDSS u', SkyviewImageServer,
+                   "SDSSu",
+                   "Skyview SDSS g"),
+                  ('SDSS', 'SDSS g', SkyviewImageServer,
+                   "SDSSg",
+                   "Skyview SDSS g"),
+                  ('SDSS', 'SDSS r', SkyviewImageServer,
+                   "SDSSr",
+                   "Skyview SDSS r"),
+                  ('SDSS', 'SDSS i', SkyviewImageServer,
+                   "SDSSi",
+                   "Skyview SDSS i"),
+                  ('SDSS', 'SDSS z', SkyviewImageServer,
+                   "SDSSz",
+                   "Skyview SDSS z"),
+                  ('2MASS', '2MASS J', SkyviewImageServer,
+                   "2MASS-J",
+                   "Skyview 2MASS J")
                   ]
 
 
@@ -158,10 +187,9 @@ class FovSetter(tk.LabelFrame):
         self.targCoords.grid(row=row, column=column, sticky=tk.W)
 
         row += 1
-        self.launchButton = tk.Button(self, width=8, fg='black',
-                                      text='Load Image', bg=g.COL['main'],
-                                      command=self.set_and_load)
-        self.launchButton.grid(row=row, column=column, sticky=tk.W)
+        surveyList = [archive[1] for archive in image_archives]
+        self.surveySelect = w.Choice(self, surveyList, width=20)
+        self.surveySelect.grid(row=row, column=column, sticky=tk.W)
 
         row += 1
         self.ra = Sexagesimal(self, callback=self.update_pointing_cb, unit='hms')
@@ -182,6 +210,12 @@ class FovSetter(tk.LabelFrame):
                                text='Query Simbad', command=self.query_simbad)
         self.query.grid(row=row, column=column, sticky=tk.W)
 
+        row += 2
+        self.launchButton = tk.Button(self, width=8, fg='black',
+                                      text='Load Image', bg=g.COL['main'],
+                                      command=self.set_and_load)
+        self.launchButton.grid(row=row, column=column, sticky=tk.W)
+
         self.fitsimage = fitsimage
         self.imfilepath = None
         self.logger = logger
@@ -198,7 +232,6 @@ class FovSetter(tk.LabelFrame):
         for (longname, shortname, klass, url, description) in image_archives:
             obj = klass(self.logger, longname, shortname, url, description)
             self.bank.addImageServer(obj)
-        self.servername = 'eso'
         self.tmpdir = tempfile.mkdtemp()
 
         # catalog servers
@@ -212,6 +245,10 @@ class FovSetter(tk.LabelFrame):
 
         # canvas that we will draw on
         self.canvas = fitsimage.canvas
+
+    @property
+    def servername(self):
+        return self.surveySelect.value()
 
     def click_cb(self, *args):
         canvas, event, x, y = args
@@ -529,7 +566,7 @@ class FovSetter(tk.LabelFrame):
             filepath = os.path.join(self.tmpdir, filename)
             if os.path.exists(filepath):
                 os.unlink(filepath)
-
+            print(self.servername, self.bank.getServerNames())
             dstpath = self.bank.getImage(self.servername, filepath, **params)
         except Exception as err:
             errmsg = "Failed to download sky image: {}".format(str(err))
