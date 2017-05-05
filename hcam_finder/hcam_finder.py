@@ -18,6 +18,7 @@ from astropy.coordinates import Longitude
 import hcam_drivers.utils.widgets as w
 from hcam_drivers.utils import get_root
 
+from .finding_chart import make_finder
 has_astroquery = True
 try:
     from .skyview import SkyviewImageServer
@@ -142,7 +143,12 @@ class Sexagesimal(tk.Frame):
         return angle.to(u.deg).value
 
     def as_string(self):
-        return ':'.join((str(w.value()) for w in self.widgets))
+        string = ':'.join((str(w.value()) for w in self.widgets))
+        angle = Angle(string, unit=self.unit)
+        if self.unit == u.hourangle:
+            return angle.to_string(sep=':', precision=2)
+        else:
+            return angle.to_string(sep=':', precision=1, alwayssign=True)
 
     def set(self, value):
         angle = Angle(value, unit=u.deg).to(self.unit)
@@ -252,6 +258,19 @@ class FovSetter(tk.LabelFrame):
 
         # canvas that we will draw on
         self.canvas = fitsimage.canvas
+
+        root = get_root(self)
+        menubar = tk.Menu(root)
+        fileMenu = tk.Menu(menubar, tearoff=0)
+        fileMenu.add_command(label='Publish', command=self.publish)
+        menubar.add_cascade(label='File', menu=fileMenu)
+        root.config(menu=menubar)
+
+    def publish(self):
+        print('publish')
+        arr = self.fitsimage.get_image_as_array()
+        make_finder(self.logger, arr, self.targName.value(),
+                    self.ra.as_string(), self.dec.as_string(), self.pa.value())
 
     @property
     def servername(self):
@@ -505,7 +524,6 @@ class FovSetter(tk.LabelFrame):
             self.canvas.update_canvas()
             # self.fitsimage.set_draw_mode('edit')
             # self.canvas.edit_select(obj)
-
         except Exception as err:
             errmsg = "failed to draw CCD: {}".format(str(err))
             self.logger.error(msg=errmsg)
