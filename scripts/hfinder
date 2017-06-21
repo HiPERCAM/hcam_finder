@@ -15,6 +15,7 @@ from ginga import AstroImage
 from ginga.tkw.ImageViewTk import ImageViewCanvas
 
 import hcam_drivers.utils as utils
+import hcam_drivers.utils.tkutils as tkutils
 from hcam_drivers.globals import Container
 import hcam_drivers.utils.widgets as w
 from hcam_drivers.utils import hcam
@@ -44,7 +45,7 @@ class FitsViewer(tk.Tk):
         check_user_dir(self.globals)
 
         # style
-        utils.addStyle(self)
+        tkutils.addStyle(self)
 
         # Now we make the HiPERCAM widgets
         # including some widgets that will not be displayed,

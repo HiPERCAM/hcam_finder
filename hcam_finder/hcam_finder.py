@@ -16,7 +16,7 @@ from astropy.vo.client import conesearch
 from astropy.coordinates import Longitude
 
 import hcam_drivers.utils.widgets as w
-from hcam_drivers.utils import get_root
+from hcam_drivers.utils.tkutils import get_root
 
 from .finding_chart import make_finder
 has_astroquery = True
