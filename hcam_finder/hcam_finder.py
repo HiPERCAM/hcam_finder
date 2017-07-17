@@ -3,6 +3,7 @@ from __future__ import print_function, absolute_import, unicode_literals, divisi
 import tempfile
 import threading
 import os
+from functools import partial
 
 import tkinter as tk
 import numpy as np
@@ -158,6 +159,40 @@ class Sexagesimal(tk.Frame):
             widget.set(field)
 
 
+class TelChooser(tk.Menu):
+    """
+    Provides a menu to choose the telescope.
+
+    The telescope setting affects the signal/noise calculations
+    and routines for pulling RA/Dec etc from the TCS.
+    """
+    def __init__(self, master, command, *args):
+        """
+        Parameters
+        ----------
+        master : tk.Widget
+            the containing widget, .e.g toolbar menu
+        """
+        super(TelChooser, self).__init__(master, tearoff=0)
+        g = get_root(self).globals
+
+        self.val = tk.StringVar()
+        tel = g.cpars.get('telins_name', list(g.TINS)[0])
+        self.val.set(tel)
+        self.val.trace('w', self._change)
+        for tel_name in g.TINS.keys():
+            self.add_radiobutton(label=tel_name, value=tel_name, variable=self.val)
+        self.args = args
+        self.root = master
+        self.command = command
+
+    def _change(self, *args):
+        g = get_root(self).globals
+        g.cpars['telins_name'] = self.val.get()
+        g.count.update()
+        self.command()
+
+
 class FovSetter(tk.LabelFrame):
 
     def __init__(self, master, fitsimage, logger):
@@ -263,6 +298,12 @@ class FovSetter(tk.LabelFrame):
         menubar = tk.Menu(root)
         fileMenu = tk.Menu(menubar, tearoff=0)
         fileMenu.add_command(label='Publish', command=self.publish)
+
+        # telescope chooser
+        telChooser_cmd = partial(self.set_telins, g=g)
+        telChooser = TelChooser(menubar, telChooser_cmd)
+
+        menubar.add_cascade(label='Telescope', menu=telChooser)
         menubar.add_cascade(label='File', menu=fileMenu)
         root.config(menu=menubar)
 
