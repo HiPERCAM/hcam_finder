@@ -511,13 +511,13 @@ class FovSetter(tk.LabelFrame):
                                             self.fov_x/2, self.fov_y/2)
         xleft, ybot = wcs.add_offset_radec(chip_ctr_ra, chip_ctr_dec,
                                            -self.fov_x/2, -self.fov_y/2)
-        points = (image.radectopix(ra, dec) for (ra, dec) in (
+        points = [image.radectopix(ra, dec) for (ra, dec) in (
             (chip_ctr_ra, ybot), (chip_ctr_ra, ytop)
-        ))
+        )]
         hline = Path(points, color='red', linestyle='dash', linewidth=2)
-        points = (image.radectopix(ra, dec) for (ra, dec) in (
+        points = [image.radectopix(ra, dec) for (ra, dec) in (
             (xleft, chip_ctr_dec), (xright, chip_ctr_dec)
-        ))
+        )]
         vline = Path(points, color='red', linestyle='dash', linewidth=2)
 
         # list of objects for compound object
