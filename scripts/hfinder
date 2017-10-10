@@ -12,6 +12,7 @@ import tkinter as tk
 from tkinter.filedialog import askopenfilename
 
 from ginga import AstroImage
+from ginga import imap
 from ginga.tkw.ImageViewTk import ImageViewCanvas
 
 import hcam_drivers.utils as utils
@@ -75,6 +76,7 @@ class FitsViewer(tk.Tk):
         fi.enable_autocuts('on')
         fi.set_autocut_params('zscale')
         fi.enable_autozoom('on')
+        fi.set_imap(imap.get_imap('neg'))
 
         fi.enable_draw(False)
         fi.enable_edit(True)
@@ -179,7 +181,7 @@ class FitsViewer(tk.Tk):
                 x, y, xn, yn, xe, ye))
             Compass = self.fitsimage.getDrawClass('compass')
             compass = Compass(0.9*image.width, 0.1*image.height, xn/5, yn/5, xe/5, ye/5)
-            compass.color = 'lightblue'
+            compass.color = 'red'
             compass.fontsize = 14
             self.fitsimage.add(compass, tag='compass')
         except Exception as e:
