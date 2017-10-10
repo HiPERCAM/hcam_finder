@@ -145,13 +145,13 @@ class FitsViewer(tk.Tk):
         widgets_to_fix[0].val.trace('w', new_check)
 
         # now layout
-        self.target.grid(row=0, column=0, sticky=tk.W+tk.N, padx=10, pady=10)
-        self.globals.count.grid(row=1, column=0, sticky=tk.W+tk.N, padx=10, pady=10)
-        self.globals.ipars.grid(row=2, column=0, sticky=tk.W+tk.N, padx=10, pady=10,
+        self.target.grid(row=0, column=0, sticky=tk.W+tk.N, padx=10, pady=3)
+        self.globals.count.grid(row=1, column=0, sticky=tk.W+tk.N, padx=10, pady=3)
+        self.globals.ipars.grid(row=2, column=0, sticky=tk.W+tk.N, padx=10, pady=3,
                                 rowspan=2)
-        viewerFrame.grid(row=0, column=1, sticky=tk.W+tk.N, padx=10, pady=10,
+        viewerFrame.grid(row=0, column=1, sticky=tk.W+tk.N, padx=10, pady=3,
                          rowspan=3)
-        self.readout.grid(row=3, column=1, sticky=tk.W+tk.N, padx=10, pady=10)
+        self.readout.grid(row=3, column=1, sticky=tk.W+tk.N, padx=10, pady=3)
 
         # configure
         self.title('hfinder')
