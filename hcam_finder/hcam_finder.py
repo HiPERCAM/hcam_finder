@@ -307,11 +307,30 @@ class FovSetter(tk.LabelFrame):
         menubar.add_cascade(label='File', menu=fileMenu)
         root.config(menu=menubar)
 
+    def window_string(self):
+        g = get_root(self).globals
+        wframe = g.ipars.wframe
+        if g.ipars.isFF():
+            winlist = []
+        if g.ipars.isDrift():
+            winlist = [
+                'xsl: {}, xsr: {}, ys: {}, nx: {}, ny: {}'.format(xsl, xsr, ys, nx, ny)
+                for (xsl, xsr, ys, nx, ny) in wframe
+            ]
+        else:
+            winlist = [
+                'xsll: {}, xsul: {}, xslr: {}, xsur: {}, ys: {}, nx: {}, ny: {}'.format(
+                    xsll, xsul, xslr, xsur, ys, nx, ny
+                ) for (xsll, xsul, xslr, xsur, ys, nx, ny) in wframe
+            ]
+        return '\n'.join(winlist)
+
     def publish(self):
         print('publish')
         arr = self.fitsimage.get_image_as_array()
         make_finder(self.logger, arr, self.targName.value(),
-                    self.ra.as_string(), self.dec.as_string(), self.pa.value())
+                    self.ra.as_string(), self.dec.as_string(), self.pa.value(),
+                    self.window_string())
 
     @property
     def servername(self):
