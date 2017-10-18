@@ -8,7 +8,7 @@ from functools import partial
 import tkinter as tk
 import numpy as np
 from ginga.util import catalog, dp, wcs
-from ginga.canvas.types.all import (Path, Polygon,
+from ginga.canvas.types.all import (Path, Polygon, Circle,
                                     CompoundObject)
 from astropy import units as u
 from astropy.coordinates import SkyCoord, Angle
@@ -306,6 +306,16 @@ class FovSetter(tk.LabelFrame):
         menubar.add_cascade(label='Telescope', menu=telChooser)
         menubar.add_cascade(label='File', menu=fileMenu)
         root.config(menu=menubar)
+
+    def targetMarker(self):
+        coo = SkyCoord(self.targCoords.value(),
+                       unit=(u.hour, u.deg))
+        image = self.fitsimage.get_image()
+        x, y = image.radectopix(coo.ra.deg, coo.dec.deg)
+        circ = Circle(x, y, 10, fill=True,
+                      color='red', fillalpha=0.3)
+        self.canvas.deleteObjectByTag('Target')
+        self.canvas.add(circ, tag='Target', redraw=True)
 
     def window_string(self):
         g = get_root(self).globals
@@ -606,6 +616,7 @@ class FovSetter(tk.LabelFrame):
         self.dec.set(coo.dec.deg)
         self.load_image()
 
+
     def load_image(self):
         self.fitsimage.onscreen_message("Getting image; please wait...")
         # offload to non-GUI thread to keep viewer somewhat responsive?
@@ -632,6 +643,7 @@ class FovSetter(tk.LabelFrame):
                 return
             finally:
                 self.draw_ccd()
+                self.targetMarker()
                 self.fitsimage.onscreen_message(None)
 
     def _load_image(self):
