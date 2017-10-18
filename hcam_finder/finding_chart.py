@@ -48,6 +48,9 @@ def make_finder_pillow(logger, fname, img_array, object_name, ra, dec, pa, wins)
     image = image.convert("RGB")
     width, height = image.size
     draw = ImageDraw.Draw(image)
+    if not object_name:
+        raise ValueError('you should supply an object name')
+        
     info_msg = "{object_name}\n{ra} {dec}\nPA = {pa:.1f}\n{wins:s}".format(
         object_name=object_name, ra=ra, dec=dec, pa=pa, wins=wins
     )
