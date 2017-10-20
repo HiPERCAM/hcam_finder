@@ -31,7 +31,7 @@ STD_FORMAT = '%(asctime)s | %(levelname)1.1s | %(filename)s:%(lineno)d (%(funcNa
 class FitsViewer(tk.Tk):
 
     def __init__(self, logger):
-        super(FitsViewer, self).__init__()
+        tk.Tk.__init__(self)
         self.logger = logger
 
         # add a container object
