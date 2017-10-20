@@ -329,8 +329,8 @@ class FovSetter(tk.LabelFrame):
             ]
         else:
             winlist = [
-                'xsll: {}, xsul: {}, xslr: {}, xsur: {}, ys: {}, nx: {}, ny: {}'.format(
-                    xsll, xsul, xslr, xsur, ys, nx, ny
+                'xsll: {}, xslr: {}, xsul: {}, xsur: {}, ys: {}, nx: {}, ny: {}'.format(
+                    xsll, xslr, xsul, xsur, ys, nx, ny
                 ) for (xsll, xsul, xslr, xsur, ys, nx, ny) in wframe
             ]
         return '\n'.join(winlist)
