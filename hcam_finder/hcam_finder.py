@@ -20,6 +20,7 @@ import hcam_drivers.utils.widgets as w
 from hcam_drivers.utils.tkutils import get_root
 
 from .finding_chart import make_finder
+from .widgets import PABox, Sexagesimal
 has_astroquery = True
 try:
     from .skyview import SkyviewImageServer
@@ -105,60 +106,6 @@ class CCDWin(Polygon):
         self.name = params.pop('name', 'window')
 
 
-class PABox(w.RangedFloat):
-    def set(self, value):
-        new_val = Longitude(value*u.deg).deg
-        super(PABox, self).set(new_val)
-
-
-class Sexagesimal(tk.Frame):
-    def __init__(self, master, callback=None, unit='hms'):
-        """
-        Class to enter sexagesimal values. value function returns degrees
-        """
-        super(Sexagesimal, self).__init__(master, pady=2)
-        if unit == 'hms':
-            self.unit = u.hourangle
-            self.widgets = [w.RangedInt(self, 0, 0, 23, callback, True, width=2),
-                            w.RangedInt(self, 0, 0, 59, callback, True, width=2),
-                            w.RangedFloat(self, 0.0, 0.0, 59.999, callback, False,
-                                          width=6)]
-        else:
-            self.unit = u.deg
-            self.widgets = [w.RangedInt(self, 0, -89, 89, callback, True, width=2),
-                            w.RangedInt(self, 0, 0, 59, callback, True, width=2),
-                            w.RangedFloat(self, 0.0, 0.0, 59.999, callback, False,
-                                          width=6)]
-        row = 0
-        col = 0
-        for nw, widget in enumerate(self.widgets):
-            widget.grid(row=row, column=col, sticky=tk.W)
-            col += 1
-            if nw != len(self.widgets) - 1:
-                tk.Label(self, text=':').grid(row=row, column=col, sticky=tk.W)
-            col += 1
-
-    def value(self):
-        string = ':'.join((str(w.value()) for w in self.widgets))
-        angle = Angle(string, unit=self.unit)
-        return angle.to(u.deg).value
-
-    def as_string(self):
-        string = ':'.join((str(w.value()) for w in self.widgets))
-        angle = Angle(string, unit=self.unit)
-        if self.unit == u.hourangle:
-            return angle.to_string(sep=':', precision=2)
-        else:
-            return angle.to_string(sep=':', precision=1, alwayssign=True)
-
-    def set(self, value):
-        angle = Angle(value, unit=u.deg).to(self.unit)
-        string = angle.to_string(sep=':')
-        fields = string.split(':')
-        for field, widget in zip(fields, self.widgets):
-            widget.set(field)
-
-
 class TelChooser(tk.Menu):
     """
     Provides a menu to choose the telescope.
@@ -173,7 +120,7 @@ class TelChooser(tk.Menu):
         master : tk.Widget
             the containing widget, .e.g toolbar menu
         """
-        super(TelChooser, self).__init__(master, tearoff=0)
+        tk.Menu.__init__(self, master, tearoff=0)
         g = get_root(self).globals
 
         self.val = tk.StringVar()
@@ -199,8 +146,7 @@ class FovSetter(tk.LabelFrame):
         """
         fitsimage is reverence to ImageViewCanvas
         """
-        super(FovSetter, self).__init__(master, pady=2,
-                                        text='Object')
+        tk.LabelFrame.__init__(self, master, pady=2, text='Object')
 
         g = get_root(self).globals
         self.set_telins(g)
@@ -240,11 +186,11 @@ class FovSetter(tk.LabelFrame):
         self.surveySelect.grid(row=row, column=column, sticky=tk.W)
 
         row += 1
-        self.ra = Sexagesimal(self, callback=self.update_pointing_cb, unit='hms')
+        self.ra = Sexagesimal(self, callback=self.update_pointing_cb, unit='hms', width=10)
         self.ra.grid(row=row, column=column, sticky=tk.W)
 
         row += 1
-        self.dec = Sexagesimal(self, callback=self.update_pointing_cb, unit='dms')
+        self.dec = Sexagesimal(self, callback=self.update_pointing_cb, unit='dms', width=10)
         self.dec.grid(row=row, column=column, sticky=tk.W)
 
         row += 1
@@ -615,7 +561,6 @@ class FovSetter(tk.LabelFrame):
         self.ra.set(coo.ra.deg)
         self.dec.set(coo.dec.deg)
         self.load_image()
-
 
     def load_image(self):
         self.fitsimage.onscreen_message("Getting image; please wait...")
