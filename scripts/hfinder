@@ -170,8 +170,15 @@ class FitsViewer(tk.Tk):
         image.load_file(filepath)
 
         self.fitsimage.set_image(image)
+        self.draw_compass()
+
+    def draw_compass(self):
         # create compass
         try:
+            image = self.fitsimage.get_image()
+            if image is None:
+                return
+
             try:
                 self.fitsimage.deleteObjectByTag('compass')
             except KeyError:
