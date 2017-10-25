@@ -174,6 +174,7 @@ class FovSetter(tk.LabelFrame):
         row = 0
         column += 1
         self.targName = w.TextEntry(self, 22)
+        self.targName.bind('<Return>', lambda event: self.query_simbad())
         self.targName.grid(row=row, column=column, sticky=tk.W)
 
         row += 1
