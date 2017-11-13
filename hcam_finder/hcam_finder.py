@@ -11,16 +11,14 @@ from ginga.util import catalog, dp, wcs
 from ginga.canvas.types.all import (Path, Polygon, Circle,
                                     CompoundObject)
 from astropy import units as u
-from astropy.coordinates import SkyCoord, Angle
+from astropy.coordinates import SkyCoord
 from astropy.coordinates.name_resolve import NameResolveError
 from astropy.vo.client import conesearch
-from astropy.coordinates import Longitude
 
-import hcam_drivers.utils.widgets as w
-from hcam_drivers.utils.tkutils import get_root
+import hcam_widgets.widgets as w
+from hcam_widgets.tkutils import get_root
 
 from .finding_chart import make_finder
-from .widgets import PABox, Sexagesimal
 has_astroquery = True
 try:
     from .skyview import SkyviewImageServer
@@ -187,16 +185,16 @@ class FovSetter(tk.LabelFrame):
         self.surveySelect.grid(row=row, column=column, sticky=tk.W)
 
         row += 1
-        self.ra = Sexagesimal(self, callback=self.update_pointing_cb, unit='hms', width=10)
+        self.ra = w.Sexagesimal(self, callback=self.update_pointing_cb, unit='hms', width=10)
         self.ra.grid(row=row, column=column, sticky=tk.W)
 
         row += 1
-        self.dec = Sexagesimal(self, callback=self.update_pointing_cb, unit='dms', width=10)
+        self.dec = w.Sexagesimal(self, callback=self.update_pointing_cb, unit='dms', width=10)
         self.dec.grid(row=row, column=column, sticky=tk.W)
 
         row += 1
-        self.pa = PABox(self, 0.0, 0.0, 359.99, self.update_rotation_cb,
-                        False, True, width=6)
+        self.pa = w.PABox(self, 0.0, 0.0, 359.99, self.update_rotation_cb,
+                          False, True, width=6)
         self.pa.grid(row=row, column=column, sticky=tk.W)
 
         column += 1
