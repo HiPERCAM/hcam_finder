@@ -15,11 +15,10 @@ from ginga import AstroImage
 from ginga import imap
 from ginga.tkw.ImageViewTk import ImageViewCanvas
 
-import hcam_drivers.utils as utils
-import hcam_drivers.utils.tkutils as tkutils
-from hcam_drivers.globals import Container
-import hcam_drivers.utils.widgets as w
-from hcam_drivers.utils import hcam
+import hcam_widgets.tkutils as tkutils
+from hcam_widgets.globals import Container
+import hcam_widgets.widgets as w
+from hcam_widgets import hcam
 
 from hcam_finder.config import (load_config, write_config,
                                 check_user_dir)

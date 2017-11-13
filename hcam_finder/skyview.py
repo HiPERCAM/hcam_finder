@@ -1,6 +1,5 @@
 # -*- coding: utf-8 -*-
 from __future__ import print_function, absolute_import, unicode_literals, division
-import time
 import six
 
 from astroquery.skyview import SkyView
@@ -63,13 +62,11 @@ class SkyviewImageServer(object):
                            frame='icrs')
 
         self.logger.info("Querying catalog: %s" % (self.full_name))
-        time_start = time.time()
         results = self.querymod.get_image_list(c, self.survey,
                                                width=wd_deg * u.degree,
                                                height=ht_deg * u.degree,
                                                pixels=(600, 600),
                                                deedger="_skip_")
-        time_elapsed = time.time() - time_start
 
         if len(results) > 0:
             self.logger.info("Found %d images" % len(results))
@@ -109,11 +106,11 @@ class SkyviewImageServer(object):
 
             self.logger.debug("getting HTTP headers")
             info = response.info()
-
+            self.logger.debug(info)
             self.logger.debug("getting data")
             data = response.read()
             self.logger.debug("fetched %d bytes" % (len(data)))
-            #data = data.decode('ascii')
+            # data = data.decode('ascii')
 
         except Exception as e:
             self.logger.error("Error reading data from '%s': %s" % (
@@ -127,4 +124,3 @@ class SkyviewImageServer(object):
 
         else:
             return data
-
