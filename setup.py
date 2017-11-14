@@ -15,6 +15,7 @@ requirements = [
     'ginga',
     'astropy',
     'pillow',
+    'configobj',
     'hcam_widgets'
 ]
 
@@ -33,7 +34,8 @@ setup(
     long_description=readme + '\n\n' + history,
     author="Stuart Littlefair",
     author_email='s.littlefair@shef.ac.uk',
-    url='https://github.com/StuartLittlefair/hcam_finder',
+    url='https://github.com/HiPERCAM/hcam_finder',
+    download_url='https://github.com/HiPERCAM/hcam_finder/archive/v0.2.1.tar.gz',
     packages=[
         'hcam_finder',
     ],
