@@ -4,8 +4,10 @@ import tempfile
 import threading
 import os
 from functools import partial
+import six
+from os.path import expanduser
+import json
 
-import tkinter as tk
 import numpy as np
 from ginga.util import catalog, dp, wcs
 from ginga.canvas.types.all import (Path, Polygon, Circle,
@@ -24,6 +26,13 @@ try:
     from .skyview import SkyviewImageServer
 except:
     has_astroquery = False
+
+if not six.PY3:
+    import Tkinter as tk
+    import tkFileDialog as filedialog
+else:
+    import tkinter as tk
+    from tkinter import filedialog
 
 # Image Archives
 image_archives = [('ESO', 'ESO DSS', catalog.ImageServer,
@@ -151,6 +160,12 @@ class FovSetter(tk.LabelFrame):
 
         row = 0
         column = 0
+        tk.Label(self, text='Proposal ID').grid(row=row, column=column, sticky=tk.W)
+
+        row += 1
+        tk.Label(self, text='PI').grid(row=row, column=column, sticky=tk.W)
+
+        row += 1
         tk.Label(self, text='Object Name').grid(row=row, column=column, sticky=tk.W)
 
         row += 1
@@ -171,6 +186,14 @@ class FovSetter(tk.LabelFrame):
 
         row = 0
         column += 1
+        self.proposalID = w.TextEntry(self, 22)
+        self.proposalID.grid(row=row, column=column, sticky=tk.W)
+
+        row += 1
+        self.PI = w.TextEntry(self, 22)
+        self.PI.grid(row=row, column=column, sticky=tk.W)
+
+        row += 1
         self.targName = w.TextEntry(self, 22)
         self.targName.bind('<Return>', lambda event: self.query_simbad())
         self.targName.grid(row=row, column=column, sticky=tk.W)
@@ -194,11 +217,11 @@ class FovSetter(tk.LabelFrame):
 
         row += 1
         self.pa = w.PABox(self, 0.0, 0.0, 359.99, self.update_rotation_cb,
-                          False, True, width=6)
+                          False, True, width=6, nplaces=2)
         self.pa.grid(row=row, column=column, sticky=tk.W)
 
         column += 1
-        row = 0
+        row = 2
         self.query = tk.Button(self, width=12, fg='black', bg=g.COL['main'],
                                text='Query Simbad', command=self.query_simbad)
         self.query.grid(row=row, column=column, sticky=tk.W)
@@ -242,22 +265,24 @@ class FovSetter(tk.LabelFrame):
         root = get_root(self)
         menubar = tk.Menu(root)
         fileMenu = tk.Menu(menubar, tearoff=0)
-        fileMenu.add_command(label='Publish', command=self.publish)
-
+        fileMenu.add_command(label='Finding Chart', command=self.publish)
+        fileMenu.add_command(label='Inst. Setup File', command=self.saveconf)
         # telescope chooser
         telChooser_cmd = partial(self.set_telins, g=g)
         telChooser = TelChooser(menubar, telChooser_cmd)
 
         menubar.add_cascade(label='Telescope', menu=telChooser)
-        menubar.add_cascade(label='File', menu=fileMenu)
+        menubar.add_cascade(label='Save', menu=fileMenu)
         root.config(menu=menubar)
 
     def targetMarker(self):
+        g = get_root(self).globals
         coo = SkyCoord(self.targCoords.value(),
                        unit=(u.hour, u.deg))
         image = self.fitsimage.get_image()
         x, y = image.radectopix(coo.ra.deg, coo.dec.deg)
-        circ = Circle(x, y, 10, fill=True,
+        size = 10 if g.cpars['telins_name'] == 'WHT' else 3
+        circ = Circle(x, y, size, fill=True,
                       color='red', fillalpha=0.3)
         self.canvas.deleteObjectByTag('Target')
         self.canvas.add(circ, tag='Target', redraw=True)
@@ -280,8 +305,36 @@ class FovSetter(tk.LabelFrame):
             ]
         return '\n'.join(winlist)
 
+    def saveconf(self):
+        fname = filedialog.asksaveasfilename(
+            initialdir=expanduser("~"),
+            defaultextension='.json',
+            filetypes=[('config files', '.json')],
+            title='Name of setup file')
+        if not fname:
+            print('Aborted save to disk')
+            return False
+
+        g = get_root(self).globals
+        data = dict()
+        data['appdata'] = g.ipars.dumpJSON()
+
+        # add user info that we should know of
+        # includes target, user and proposal
+        user = dict()
+        user['PI'] = self.PI.value()
+        user['ID'] = self.proposalID.value()
+        user['target'] = self.targName.value()
+        data['user'] = user
+
+        # write file
+        with open(fname, 'w') as of:
+            of.write(json.dumps(data, sort_keys=True, indent=4,
+                                separators=(',', ': ')))
+        print('Saved setup to ' + fname)
+        return True
+
     def publish(self):
-        print('publish')
         arr = self.fitsimage.get_image_as_array()
         make_finder(self.logger, arr, self.targName.value(),
                     self.ra.as_string(), self.dec.as_string(), self.pa.value(),
