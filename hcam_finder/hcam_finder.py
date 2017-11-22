@@ -217,7 +217,7 @@ class FovSetter(tk.LabelFrame):
 
         row += 1
         self.pa = w.PABox(self, 0.0, 0.0, 359.99, self.update_rotation_cb,
-                          False, True, width=6)
+                          False, True, width=6, nplaces=2)
         self.pa.grid(row=row, column=column, sticky=tk.W)
 
         column += 1

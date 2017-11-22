@@ -114,7 +114,12 @@ class FitsViewer(tk.Tk):
 
         fi.set_desired_size(600, 600)
 
+        tips = """
+        -: zoom out, +: zoom in, q: enable pan mode, r: enter rotate mode, R: restore rotation I: invert color map, t: enter contrast mode (control contrast with mouse), T: restore contrast
+        see http://ginga.readthedocs.io/en/latest/quickref.html for more"""
+
         self.readout = tk.Label(self, text='')
+        self.helpbox = tk.Label(self, text=tips)
 
         # target widget
         self.target = FovSetter(self, self.fitsimage, logger)
@@ -153,10 +158,11 @@ class FitsViewer(tk.Tk):
         self.target.grid(row=0, column=0, sticky=tk.W+tk.N, padx=10, pady=3)
         self.globals.count.grid(row=1, column=0, sticky=tk.W+tk.N, padx=10, pady=3)
         self.globals.ipars.grid(row=2, column=0, sticky=tk.W+tk.N, padx=10, pady=3,
-                                rowspan=2)
+                                rowspan=3)
         viewerFrame.grid(row=0, column=1, sticky=tk.W+tk.N, padx=10, pady=3,
                          rowspan=3)
         self.readout.grid(row=3, column=1, sticky=tk.W+tk.N, padx=10, pady=3)
+        self.helpbox.grid(row=4, column=1, sticky=tk.W+tk.N, padx=10, pady=3)
 
         # configure
         self.title('hfinder')
