@@ -1,9 +1,12 @@
 # -*- coding: utf-8 -*-
 from __future__ import print_function, absolute_import, unicode_literals, division
 import pkg_resources
-
-from tkinter import filedialog
+import six
 from os.path import expanduser
+if not six.PY3:
+    import tkFileDialog as filedialog
+else:
+    from tkinter import filedialog
 
 # let's see which image library we have
 have_pillow = True
