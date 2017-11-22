@@ -1,19 +1,21 @@
-Welcome to hcam-finder's documentation!
-======================================
 
-Contents:
+.. include:: ../README.rst
 
-.. toctree::
-   :maxdepth: 2
+Bugs
+-----
+``hfinder`` is of course entirely bug free! However, if you do find an issue,
+please raise it at the `github page`_.
 
-   readme
-   installation
-   usage
-   contributing
-   authorshistory
+.. _github page: https://github.com/HiPERCAM/hcam_finder/issues
+
+Usage
+-----
+
+Please see the :doc:`detailed usage instructions <usage>`
+
 
 Indices and tables
-==================
+------------------
 
 * :ref:`genindex`
 * :ref:`modindex`

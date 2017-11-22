@@ -18,11 +18,15 @@ hcam-finder
      :alt: Updates
 
 
-Observation planning and finding charts for HiPerCAM
+Observation planning and finding charts for HiPERCAM
 
-``hcam_finder`` provides a Python script ``hfinder`` for generating finding
-charts for HiPerCAM on the WHT and GTC. ``hcam_finder`` is written in Python and is based on TKinter. It should be
-compatible with Python2 and Python3.
+``hcam_finder`` provides a Python script ``hfinder`` for observation planning with
+HiPERCAM on the WHT and GTC. It allows you to generate finding charts as well as specify the instrument setup
+you require, whilst providing an estimate of observing cadence, exposure time and
+S/N estimates.
+
+``hcam_finder`` is written in Python and is based on TKinter. It should be compatible
+with Python2 and Python3.
 
 Installation
 ------------
