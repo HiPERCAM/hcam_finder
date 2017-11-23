@@ -20,7 +20,7 @@ outputs**.
 
 .. _windows:
 
-Windows
+Windowed mode
 -------
 
 To enable higher frame rates, HiPERCAM can use one or two windows per output. Since there
@@ -35,7 +35,7 @@ the CCD towards the centre.
 
 If there are two window quads, they cannot overlap in y.
 
-Synchronising Windows
+Synchronising windows
 `````````````````````
 
 If on-chip binning is enabled, it is possible to define windows that do not align with the
@@ -46,7 +46,7 @@ Clicking this will align the windows with the boundaries of binned pixels.
 
 .. _clear_mode:
 
-Clear Mode
+Clear mode
 ----------
 
 Sometimes extremely short exposures are needed, even with full frame data. Sky flats would be
@@ -62,17 +62,93 @@ As a result, if the user needs short exposure times to avoid saturation, it is o
 preferable to use a faster readout speed, :ref:`windows` or :ref:`drift_mode` to achieve
 this without sacrificing observing efficiency.
 
-Clear mode is also enabled automatically when :ref:`nod`, since not clearing the CCD would
-lead to trailing of bright stars in the images.
+Clear mode is enabled by selecting the :guilabel:`Clear` checkbox.
 
 .. _drift_mode:
 
-Drift Mode
+Drift mode
 ----------
 
-Drift mode is used to enable the highest frame rates.
+Drift mode is used to enable the highest frame rates. Instead of shifting the entire image area
+into the storage area at the end of each exposure, only a small window at the bottom of the CCD
+is shifted into the storage area. This minimises the dead time involved in shifting charge to the
+storage area and allows frame rates of ~1 kHz for relatively small windows.
+
+In drift mode, a number of windows are present in the storage area at any one time. At the same
+time, any charge in pixels above the windows is eventually clocked into the windows, and becomes
+part of that frame. To prevent bright stars from contaminating the drift mode data, a blade
+is inserted into the focal plane, blocking off most of the image area of the CCD. Because the
+windows in drift mode spend longer on the chip, they accumulate dark current; drift mode should
+only be used for frame rates faster than ~10 Hz as a result.
+
+For more information about drift mode, see the
+`ULTRACAM instrument paper <https://ui.adsabs.harvard.edu/#abs/2007MNRAS.378..825D/abstract>`_
+and it's appendix.
+
+Exposure multipliers
+--------------------
+
+The instrument setup will determine the exposure time and cadence of your data. It is unlikely
+that this exposure time will be optimal for your target in all bands. Many objects will need
+longer exposures at the blue or red extremes. HiPERCAM supports *exposure multipliers*. These
+allow a CCD to be readout once every N exposures, and can be changed in the fields labelled
+:guilabel:`nu`, :guilabel:`ng`...
+
+With, for example, nu=2, the u-band CCD will read out every two frames. This allows you to
+double the exposure time for the u-band CCD only. Note that the S/N estimates in ``hfinder``
+do *not* take account of the exposure multipliers.
+
+Miscellaneous settings
+-----------------------
+
+The remaining settings you can change are described below:
+
+Num. exposures
+    The number of exposures to take before stopping. Most HiPERCAM users will want to take a
+    continuous series of exposures and stop after an alloted time. In which case this field
+    should be set to 0.
+
+Readout speed
+    Fast readout speed reduces the minimum exposure time in full-frame readout from 2.2s to 1.3s.
+    This comes at the expense of increased readout noise. The impact of this on the S/N of your
+    target is shown in ``hfinder``.
+
+Fast clocks
+    Users wanting the ultimate in high speed performance can enable this option. This increases the
+    rate at which charge is clocked in the CCDs. It will have an impact on charge transfer efficiency.
+    As of today, this impact has not been well characterised, but we do not think it is serious.
+
+Overscan
+    Enable the recording of the overscan regions at the left and right edges of the chip. Can be
+    useful if precise measurement of the bias in each frame is needed. This is important for the
+    highest levels of photometric precision, so consider this option for, e.g. exoplanet transit
+    observations.
+
 
 .. _nod:
 
 Nodding the Telescope
 ---------------------
+
+It is possible to nod the telescope between frames. This can be useful if, for example, you
+want to make a flat-field directly from the night sky observations themselves. :ref:`clear_mode`
+is always enabled when nodding the telescope, to avoid trails from bright stars appearing
+in the image.
+
+Whilst it is possible to nod in :ref:`windows`, the overheads involved in moving the telescope
+mean that there is little point in doing so, and we recommend full-frame mode with this option.
+
+If you wish to nod the telescope, please indicate this in your phase II submission. Make sure
+you have :ref:`clear_mode` turned on in ``hfinder`` so that your S/N estimates are accurate.
+As part of your phase two submission, you will have to submit a plain text file specifying
+the offset pattern you require. The format of this file is a simple list of RA, Dec offsets
+in arcseconds as shown below::
+
+    0  0
+    0  20
+    20 20
+    20 0
+    0  20
+
+This offset pattern will be repeated until your exposures are finished. At the moment,
+there is no way to display the nodding pattern in ``hfinder`` itself.
