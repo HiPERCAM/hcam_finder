@@ -13,6 +13,11 @@ Usage
 
 Please see the :doc:`detailed usage instructions <usage>`
 
+.. toctree::
+    :maxdepth: 2
+
+    usage
+    hipercam
 
 Indices and tables
 ------------------
