@@ -32,7 +32,7 @@ Installation
 ------------
 
 The software is written as much as possible to make use of core Python
-components. It requires my own `hcam_widgets <https://github.com/StuartLittlefair/hcam_widgets>`_ module.
+components. It requires my own `hcam_widgets <https://github.com/HiPERCAM/hcam_widgets>`_ module.
 It also relies on the third party libraries `astropy <http://astropy.org/>`_ for astronomical
 calculations and catalog lookup, as well as `ginga <https://ginga.readthedocs.io/en/latest/>`_ for
 image display. Optionally, you can also use `astroquery <https://astroquery.readthedocs.io>`_ to expand
