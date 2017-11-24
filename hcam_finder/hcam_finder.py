@@ -222,12 +222,12 @@ class FovSetter(tk.LabelFrame):
 
         column += 1
         row = 2
-        self.query = tk.Button(self, width=12, fg='black', bg=g.COL['main'],
+        self.query = tk.Button(self, width=14, fg='black', bg=g.COL['main'],
                                text='Query Simbad', command=self.query_simbad)
         self.query.grid(row=row, column=column, sticky=tk.W)
 
         row += 2
-        self.launchButton = tk.Button(self, width=8, fg='black',
+        self.launchButton = tk.Button(self, width=14, fg='black',
                                       text='Load Image', bg=g.COL['main'],
                                       command=self.set_and_load)
         self.launchButton.grid(row=row, column=column, sticky=tk.W)
