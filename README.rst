@@ -38,7 +38,7 @@ calculations and catalog lookup, as well as `ginga <https://ginga.readthedocs.io
 image display. Optionally, you can also use `astroquery <https://astroquery.readthedocs.io>`_ to expand
 the range of surveys one can download images from.
 
-Once you have installed these, install with the usual::
+Installing using ``pip`` should take care of these dependencies. Simply install with::
 
  pip install .
 
