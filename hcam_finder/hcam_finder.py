@@ -155,6 +155,8 @@ class FovSetter(tk.LabelFrame):
         """
         tk.LabelFrame.__init__(self, master, pady=2, text='Object')
 
+        self.fitsimage = fitsimage
+
         g = get_root(self).globals
         self.set_telins(g)
 
@@ -232,7 +234,6 @@ class FovSetter(tk.LabelFrame):
                                       command=self.set_and_load)
         self.launchButton.grid(row=row, column=column, sticky=tk.W)
 
-        self.fitsimage = fitsimage
         self.imfilepath = None
         self.logger = logger
 
@@ -327,6 +328,18 @@ class FovSetter(tk.LabelFrame):
         user['target'] = self.targName.value()
         data['user'] = user
 
+        # target info
+        target = dict()
+        target['target'] = self.targName.value()
+        targ_coord = SkyCoord(self.targCoords.value(), unit=(u.hour, u.deg))
+        target['TARG_RA'] = targ_coord.ra.to_string(sep=':', unit=u.hour, precision=2)
+        target['TARG_DEC'] = targ_coord.dec.to_string(sep=':', precision=1, unit=u.deg,
+                                                      alwayssign=False)
+        target['RA'] = self.ra._value.to_string(sep=':', unit=u.hour, precision=2)
+        target['DEC'] = self.dec._value.to_string(sep=':', precision=1, unit=u.deg, alwayssign=False)
+        target['PA'] = self.pa.value()
+        data['target'] = target
+
         # write file
         with open(fname, 'w') as of:
             of.write(json.dumps(data, sort_keys=True, indent=4,
@@ -407,6 +420,7 @@ class FovSetter(tk.LabelFrame):
         self.rotcen_y = g.cpars[telins]['rotcen_y'] * u.pix
         # is image flipped E-W?
         self.flipEW = g.cpars[telins]['flipEW']
+        self.fitsimage.t_['flip_x'] = self.flipEW
         # does increasing PA rotate towards east from north?
         self.EofN = g.cpars[telins]['EofN']
         # rotator position in degrees when chip runs N-S
