@@ -44,6 +44,10 @@ Installing using ``pip`` should take care of these dependencies. Simply install 
 
 or if you don't have root access::
 
+ sudo pip install .
+
+or
+
  pip install --user .
 
 * Free software: MIT license
