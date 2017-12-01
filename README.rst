@@ -46,7 +46,7 @@ or if you don't have root access::
 
  sudo pip install .
 
-or
+or::
 
  pip install --user .
 
