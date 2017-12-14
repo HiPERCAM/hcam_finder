@@ -22,7 +22,7 @@ Before proceeding any further, make sure the correct telescope is selected using
 Target Setup
 ------------
 
-Enter your proposal ID, PI Name and Object Name in the appropriate boxes. You can query
+Enter your Object Name in the appropriate box. You can query
 `SIMBAD <http://simbad.u-strasbg.fr/simbad/>`_ using your entered target name by
 pressing the :guilabel:`Query Simbad` button. If SIMBAD lookup fails, you can enter
 your target coordinates by hand.
