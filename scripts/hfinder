@@ -1,6 +1,4 @@
-#!/usr/bin/env python
-#
-# example2_tk.py -- Simple, configurable FITS viewer.
+#! /usr/bin/env python
 #
 # This is open-source software licensed under a BSD license.
 # Please see the file LICENSE.txt for details.

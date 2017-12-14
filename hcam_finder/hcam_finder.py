@@ -162,12 +162,6 @@ class FovSetter(tk.LabelFrame):
 
         row = 0
         column = 0
-        tk.Label(self, text='Proposal ID').grid(row=row, column=column, sticky=tk.W)
-
-        row += 1
-        tk.Label(self, text='PI').grid(row=row, column=column, sticky=tk.W)
-
-        row += 1
         tk.Label(self, text='Object Name').grid(row=row, column=column, sticky=tk.W)
 
         row += 1
@@ -188,14 +182,6 @@ class FovSetter(tk.LabelFrame):
 
         row = 0
         column += 1
-        self.proposalID = w.TextEntry(self, 22)
-        self.proposalID.grid(row=row, column=column, sticky=tk.W)
-
-        row += 1
-        self.PI = w.TextEntry(self, 22)
-        self.PI.grid(row=row, column=column, sticky=tk.W)
-
-        row += 1
         self.targName = w.TextEntry(self, 22)
         self.targName.bind('<Return>', lambda event: self.query_simbad())
         self.targName.grid(row=row, column=column, sticky=tk.W)
@@ -223,7 +209,7 @@ class FovSetter(tk.LabelFrame):
         self.pa.grid(row=row, column=column, sticky=tk.W)
 
         column += 1
-        row = 2
+        row = 0
         self.query = tk.Button(self, width=14, fg='black', bg=g.COL['main'],
                                text='Query Simbad', command=self.query_simbad)
         self.query.grid(row=row, column=column, sticky=tk.W)
@@ -323,8 +309,6 @@ class FovSetter(tk.LabelFrame):
         # add user info that we should know of
         # includes target, user and proposal
         user = dict()
-        user['PI'] = self.PI.value()
-        user['ID'] = self.proposalID.value()
         user['target'] = self.targName.value()
         data['user'] = user
 
@@ -651,10 +635,10 @@ class FovSetter(tk.LabelFrame):
                     str(err)
                 )
                 self.logger.error(msg=errmsg)
-                return
-            finally:
+            else:
                 self.draw_ccd()
                 self.targetMarker()
+            finally:
                 self.fitsimage.onscreen_message(None)
 
     def _load_image(self):
