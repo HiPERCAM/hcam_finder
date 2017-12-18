@@ -135,14 +135,12 @@ want to make a flat-field directly from the night sky observations themselves. :
 is always enabled when nodding the telescope, to avoid trails from bright stars appearing
 in the image.
 
-Whilst it is possible to nod in :ref:`windows`, the overheads involved in moving the telescope
-mean that there is little point in doing so, and we recommend full-frame mode with this option.
+The overheads involved in moving the telescope mean that there is little point in
+using any mode other than full-frame readout with this option.
 
-If you wish to nod the telescope, please indicate this in your phase II submission. Make sure
-you have :ref:`clear_mode` turned on in ``hfinder`` so that your S/N estimates are accurate.
-As part of your phase two submission, you will have to submit a plain text file specifying
-the offset pattern you require. The format of this file is a simple list of RA, Dec offsets
-in arcseconds as shown below::
+If you wish to nod the telescope, check the  :guilabel:`Nodding` checkbox. You will be prompted
+for a plain text file specifying the offset pattern you require. The format of this file is a
+simple list of RA, Dec offsets in arcseconds as shown below::
 
     0  0
     0  20
@@ -151,4 +149,6 @@ in arcseconds as shown below::
     0  20
 
 This offset pattern will be repeated until your exposures are finished. At the moment,
-there is no way to display the nodding pattern in ``hfinder`` itself.
+there is no way to display the nodding pattern in ``hfinder`` itself, but ``hfinder``
+will estimate the impact of nodding on your cadence and overal signal-to-noise. Until
+HiPERCAM is commissioned on-sky, these estimates will be quite crude.
