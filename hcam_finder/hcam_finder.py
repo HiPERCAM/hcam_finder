@@ -238,6 +238,7 @@ class FovSetter(tk.LabelFrame):
         self.tmpdir = tempfile.mkdtemp()
 
         # catalog servers
+        """
         for longname in conesearch.list_catalogs():
             shortname = longname
             url = ""    # astropy conesearch doesn't need URL
@@ -245,6 +246,7 @@ class FovSetter(tk.LabelFrame):
             obj = catalog.AstroPyCatalogServer(logger, longname, shortname,
                                                url, description)
             self.bank.addCatalogServer(obj)
+        """
 
         # canvas that we will draw on
         self.canvas = fitsimage.canvas
