@@ -318,11 +318,11 @@ class FovSetter(tk.LabelFrame):
         target = dict()
         target['target'] = self.targName.value()
         targ_coord = SkyCoord(self.targCoords.value(), unit=(u.hour, u.deg))
-        target['TARG_RA'] = targ_coord.ra.to_string(sep=':', unit=u.hour, precision=2)
+        target['TARG_RA'] = targ_coord.ra.to_string(sep=':', unit=u.hour, pad=True, precision=2)
         target['TARG_DEC'] = targ_coord.dec.to_string(sep=':', precision=1, unit=u.deg,
-                                                      alwayssign=False)
-        target['RA'] = self.ra._value.to_string(sep=':', unit=u.hour, precision=2)
-        target['DEC'] = self.dec._value.to_string(sep=':', precision=1, unit=u.deg, alwayssign=False)
+                                                      alwayssign=False, pad=True)
+        target['RA'] = self.ra._value.to_string(sep=':', unit=u.hour, pad=True, precision=2)
+        target['DEC'] = self.dec._value.to_string(sep=':', precision=1, pad=True, unit=u.deg, alwayssign=False)
         target['PA'] = self.pa.value()
         data['target'] = target
 
