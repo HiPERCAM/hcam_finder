@@ -40,15 +40,15 @@ the range of surveys one can download images from.
 
 Installing using ``pip`` should take care of these dependencies. Simply install with::
 
- pip install .
+ pip install hcam_finder
 
 or if you don't have root access::
 
- sudo pip install .
+ sudo pip install hcam_finder
 
 or::
 
- pip install --user .
+ pip install --user hcam_finder
 
 * Free software: MIT license
 * Documentation: https://hcam-finder.readthedocs.io.
