@@ -334,8 +334,9 @@ class FovSetter(tk.LabelFrame):
         return True
 
     def publish(self):
+        g = get_root(self).globals
         arr = self.fitsimage.get_image_as_array()
-        make_finder(self.logger, arr, self.targName.value(),
+        make_finder(self.logger, arr, self.targName.value(), g.cpars['telins_name'],
                     self.ra.as_string(), self.dec.as_string(), self.pa.value(),
                     self.window_string())
 

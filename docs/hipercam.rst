@@ -140,7 +140,7 @@ using any mode other than full-frame readout with this option.
 
 If you wish to nod the telescope, check the  :guilabel:`Nodding` checkbox. You will be prompted
 for a plain text file specifying the offset pattern you require. The format of this file is a
-simple list of RA, Dec offsets in arcseconds as shown below::
+simple list of *absolute* RA, Dec offsets in arcseconds as shown below::
 
     0  0
     0  20

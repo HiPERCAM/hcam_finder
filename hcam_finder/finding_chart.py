@@ -24,7 +24,7 @@ except:
     have_opencv = False
 
 
-def make_finder(logger, img_array, object_name, ra, dec, pa, wins):
+def make_finder(logger, img_array, object_name, tel, ra, dec, pa, wins):
     """
     Make finding chart with object info overlaid
     """
@@ -35,18 +35,18 @@ def make_finder(logger, img_array, object_name, ra, dec, pa, wins):
         title='Name of finding chart')
 
     if have_pillow:
-        make_finder_pillow(logger, fname, img_array, object_name, ra, dec, pa, wins)
+        make_finder_pillow(logger, fname, img_array, object_name, tel, ra, dec, pa, wins)
     elif have_opencv:
-        make_finder_opencv(logger, fname, img_array, object_name, ra, dec, pa, wins)
+        make_finder_opencv(logger, fname, img_array, object_name, tel, ra, dec, pa, wins)
     else:
         logger.error(msg='Cannot make finder, please install openCV or Pillow')
 
 
-def make_finder_opencv(logger, fname, img_array, object_name, ra, dec, pa, wins):
+def make_finder_opencv(logger, fname, img_array, object_name, tel, ra, dec, pa, wins):
     logger.error(msg="openCV finding chart saving not implemented, please install Pillow")
 
 
-def make_finder_pillow(logger, fname, img_array, object_name, ra, dec, pa, wins):
+def make_finder_pillow(logger, fname, img_array, object_name, tel, ra, dec, pa, wins):
     image = Image.fromarray(img_array)
     image = image.convert("RGB")
     width, height = image.size
@@ -54,8 +54,8 @@ def make_finder_pillow(logger, fname, img_array, object_name, ra, dec, pa, wins)
     if not object_name:
         raise ValueError('you should supply an object name')
 
-    info_msg = "{object_name}\n{ra} {dec}\nPA = {pa:.1f}\n{wins:s}".format(
-        object_name=object_name, ra=ra, dec=dec, pa=pa, wins=wins
+    info_msg = "{object_name} ({tel})\n{ra} {dec}\nPA = {pa:.1f}\n{wins:s}".format(
+        object_name=object_name, tel=tel, ra=ra, dec=dec, pa=pa, wins=wins
     )
     font_size = 5
     font_file = pkg_resources.resource_filename('hcam_finder', 'data/Lato-Regular.ttf')
