@@ -20,6 +20,10 @@ hcam-finder
 
 Observation planning and finding charts for HiPERCAM
 
+**IMPORTANT: as of v0.4.8 hcam_finder has the correct rotator centre and
+offset for the GTC. If you installed prior to this, make sure you delete the
+config file `~/.hfinder/config` and update to the latest version.**
+
 ``hcam_finder`` provides a Python script ``hfinder`` for observation planning with
 HiPERCAM on the WHT and GTC. It allows you to generate finding charts as well as specify the instrument setup
 you require, whilst providing an estimate of observing cadence, exposure time and
