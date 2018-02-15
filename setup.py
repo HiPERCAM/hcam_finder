@@ -35,7 +35,7 @@ setup(
     author="Stuart Littlefair",
     author_email='s.littlefair@shef.ac.uk',
     url='https://github.com/HiPERCAM/hcam_finder',
-    download_url='https://github.com/HiPERCAM/hcam_finder/archive/v0.4.8.tar.gz',
+    download_url='https://github.com/HiPERCAM/hcam_finder/archive/v0.4.9.tar.gz',
     packages=[
         'hcam_finder',
     ],
