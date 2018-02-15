@@ -15,7 +15,6 @@ from ginga.canvas.types.all import (Path, Polygon, Circle,
 from astropy import units as u
 from astropy.coordinates import SkyCoord
 from astropy.coordinates.name_resolve import NameResolveError
-from astropy.vo.client import conesearch
 
 import hcam_widgets.widgets as w
 from hcam_widgets.tkutils import get_root
