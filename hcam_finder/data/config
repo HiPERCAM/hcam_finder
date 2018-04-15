@@ -88,4 +88,4 @@ flipEW = True
 # does increasing PA rotate towards east from north?
 EofN = True
 # rotator position in degrees when chip runs N-S
-paOff = 76.97
+paOff = 0
