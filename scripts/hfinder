@@ -81,6 +81,7 @@ class FitsViewer(tk.Tk):
 
         # style
         tkutils.addStyle(self)
+        self.tk_focusFollowsMouse()
 
         # Now we make the HiPERCAM widgets
         # including some widgets that will not be displayed,
@@ -121,7 +122,7 @@ class FitsViewer(tk.Tk):
         fi.ui_setActive(True)
         fi.show_pan_mark(True)
         fi.show_mode_indicator(True)
-        fi.show_focus_indicator(False)
+        fi.show_focus_indicator(True)
 
         telins = self.globals.cpars['telins_name']
         if self.globals.cpars[telins]['flipEW']:
