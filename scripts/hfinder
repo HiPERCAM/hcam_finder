@@ -11,6 +11,7 @@ import six
 from ginga import AstroImage
 from ginga import imap
 from ginga.tkw.ImageViewTk import ImageViewCanvas
+from ginga.canvas.types.astro import Compass
 
 import hcam_widgets.tkutils as tkutils
 from hcam_widgets.globals import Container
@@ -221,14 +222,17 @@ class FitsViewer(tk.Tk):
                 self.fitsimage.deleteObjectByTag('compass')
             except KeyError:
                 pass
-            (x, y, xn, yn, xe, ye) = image.calc_compass_center()
+
+            xp, yp = 0.9*image.width, 0.1*image.height
+            x, y, xn, yn, xe, ye = image.calc_compass(xp, yp, 0.016, 0.016)
             self.logger.info("x=%d y=%d xn=%d yn=%d xe=%d ye=%d" % (
                 x, y, xn, yn, xe, ye))
-            Compass = self.fitsimage.getDrawClass('compass')
-            compass = Compass(0.9*image.width, 0.1*image.height, xn/5, yn/5, xe/5, ye/5)
+            radius = float(min(image.width, image.height)) * 0.1
+            compass = Compass(x, y, radius)
             compass.color = 'red'
             compass.fontsize = 14
             self.fitsimage.add(compass, tag='compass')
+
         except Exception as e:
             self.logger.warning("Can't calculate compass: %s" % (
                 str(e)))
