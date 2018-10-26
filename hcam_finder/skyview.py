@@ -65,7 +65,7 @@ class SkyviewImageServer(object):
         results = self.querymod.get_image_list(c, self.survey,
                                                width=wd_deg * u.degree,
                                                height=ht_deg * u.degree,
-                                               pixels=(600, 600),
+                                               pixels=(1200, 1200),
                                                deedger="_skip_")
 
         if len(results) > 0:
