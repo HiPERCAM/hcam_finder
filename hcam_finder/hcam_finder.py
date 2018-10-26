@@ -10,7 +10,7 @@ import json
 
 import numpy as np
 from ginga.util import catalog, dp, wcs
-from ginga.canvas.types.all import (Path, Polygon, Circle,
+from ginga.canvas.types.all import (Path, Circle,
                                     CompoundObject)
 from astropy import units as u
 from astropy.coordinates import SkyCoord
@@ -20,10 +20,12 @@ import hcam_widgets.widgets as w
 from hcam_widgets.tkutils import get_root
 
 from .finding_chart import make_finder
+from .shapes import CCDWin, CompoPatrolArc, CompoFreeRegion
+
 has_astroquery = True
 try:
     from .skyview import SkyviewImageServer
-except:
+except ImportError:
     has_astroquery = False
 
 if not six.PY3:
@@ -82,34 +84,16 @@ def _px_deg(px_val, px_scale):
     ).value
 
 
-class CCDWin(Polygon):
-    def __init__(self, ra_ll_deg, dec_ll_deg, xs, ys,
-                 image, **params):
-        """
-        Shape for drawing ccd window
-
-        Parameters
-        ----------
-        ra_ll_deg : float
-            lower left coordinate in ra (deg)
-        dec_ll_deg : float
-            lower left y coord in dec (deg)
-        xs : float
-            x size in degrees
-        ys : float
-            y size in degrees
-        image : `~ginga.AstroImage`
-            image to plot Window on
-        """
-        points_wcs = (
-            (ra_ll_deg, dec_ll_deg),
-            wcs.add_offset_radec(ra_ll_deg, dec_ll_deg, xs, 0.0),
-            wcs.add_offset_radec(ra_ll_deg, dec_ll_deg, xs, ys),
-            wcs.add_offset_radec(ra_ll_deg, dec_ll_deg, 0.0, ys)
-        )
-        self.points = [image.radectopix(ra, dec) for (ra, dec) in points_wcs]
-        super(CCDWin, self).__init__(self.points, **params)
-        self.name = params.pop('name', 'window')
+@u.quantity_input(deg_val=u.deg)
+@u.quantity_input(px_scale=u.arcsec/u.pix)
+def _deg_px(deg_val, px_scale):
+    """
+    convert from degrees/arcmins etc to pixels
+    """
+    return deg_val.to(
+        u.pix,
+        equivalencies=u.pixel_scale(px_scale)
+    ).value
 
 
 class TelChooser(tk.Menu):
@@ -441,15 +425,19 @@ class FovSetter(tk.LabelFrame):
         if image is None:
             return
         try:
-            obj = self.canvas.get_object_by_tag('ccd_overlay')
+            objs = [self.canvas.get_object_by_tag('ccd_overlay'),
+                    self.canvas.get_object_by_tag('compo_overlay')]
+
             ctr_x, ctr_y = image.radectopix(self.ctr_ra_deg, self.ctr_dec_deg)
             self.ctr_x, self.ctr_y = ctr_x, ctr_y
             old_x, old_y = image.radectopix(self.ra_as_drawn, self.dec_as_drawn)
-            obj.move_delta(ctr_x - old_x, ctr_y - old_y)
+            for obj in objs:
+                if obj is not None:
+                    obj.move_delta(ctr_x - old_x, ctr_y - old_y)
             self.canvas.update_canvas()
             self.ra_as_drawn = self.ctr_ra_deg
             self.dec_as_drawn = self.ctr_dec_deg
-        except:
+        except Exception:
             self.draw_ccd(*args)
 
     def update_rotation_cb(self, *args):
@@ -457,14 +445,17 @@ class FovSetter(tk.LabelFrame):
         if image is None:
             return
         try:
-            obj = self.canvas.get_object_by_tag('ccd_overlay')
+            objs = [self.canvas.get_object_by_tag('ccd_overlay'),
+                    self.canvas.get_object_by_tag('compo_overlay')]
             pa = self.pa.value() - self.paOff
             if not self.EofN:
                 pa *= -1
-            obj.rotate(pa - self.pa_as_drawn, self.ctr_x, self.ctr_y)
+            for obj in objs:
+                if obj is not None:
+                    obj.rotate(pa - self.pa_as_drawn, self.ctr_x, self.ctr_y)
             self.canvas.update_canvas()
             self.pa_as_drawn = pa
-        except:
+        except Exception:
             self.draw_ccd(*args)
 
     def _step_ccd(self):
@@ -586,8 +577,9 @@ class FovSetter(tk.LabelFrame):
         )]
         vline = Path(points, color='red', linestyle='dash', linewidth=2)
 
+
         # list of objects for compound object
-        l = [mainCCD, hline, vline]
+        obl = [mainCCD, hline, vline]
 
         # iterate over window pairs
         # these coords in ccd pixel vaues
@@ -595,16 +587,29 @@ class FovSetter(tk.LabelFrame):
         if not g.ipars.isFF():
             if g.ipars.isDrift():
                 for xsl, xsr, ys, nx, ny in wframe:
-                    l.append(self._make_win(xsl, ys, nx, ny, image, **params))
-                    l.append(self._make_win(xsr, ys, nx, ny, image, **params))
+                    obl.append(self._make_win(xsl, ys, nx, ny, image, **params))
+                    obl.append(self._make_win(xsr, ys, nx, ny, image, **params))
             else:
                 for xsll, xsul, xslr, xsur, ys, nx, ny in wframe:
-                    l.append(self._make_win(xsll, ys, nx, ny, image, **params))
-                    l.append(self._make_win(xsul, 1024-ys, nx, -ny, image, **params))
-                    l.append(self._make_win(xslr, ys, nx, ny, image, **params))
-                    l.append(self._make_win(xsur, 1024-ys, nx, -ny, image, **params))
+                    obl.append(self._make_win(xsll, ys, nx, ny, image, **params))
+                    obl.append(self._make_win(xsul, 1024-ys, nx, -ny, image, **params))
+                    obl.append(self._make_win(xslr, ys, nx, ny, image, **params))
+                    obl.append(self._make_win(xsur, 1024-ys, nx, -ny, image, **params))
 
-        obj = CompoundObject(*l)
+        obj = CompoundObject(*obl)
+        obj.editable = True
+        return obj
+
+    def _make_compo(self, image):
+        # add COMPO components
+        compo_arc = CompoPatrolArc(self.ctr_ra_deg, self.ctr_dec_deg, image,
+                                   fill=True, fillcolor='yellow', fillalpha=0.3,
+                                   name='COMPO_Arc')
+        compo_free = CompoFreeRegion(self.ctr_ra_deg, self.ctr_dec_deg, image,
+                                     fill=True, fillcolor='green', fillalpha=0.3,
+                                     name='compo_free_region')
+        obl = [compo_arc, compo_free]
+        obj = CompoundObject(*obl)
         obj.editable = True
         return obj
 
@@ -612,12 +617,19 @@ class FovSetter(tk.LabelFrame):
         image = self.fitsimage.get_image()
         if image is None:
             return
+
         try:
-            obj = self._make_ccd(image)
-            obj.showcap = True
             pa = self.pa.value() - self.paOff
             if not self.EofN:
                 pa *= -1
+        except Exception as err:
+            errmsg = "failed to find rotation: {}".format(str(err))
+            self.logger.error(errmsg)
+
+        try:
+            obj = self._make_ccd(image)
+            obj.showcap = True
+
             self.canvas.deleteObjectByTag('ccd_overlay')
             self.canvas.add(obj, tag='ccd_overlay', redraw=False)
             # rotate
@@ -627,13 +639,22 @@ class FovSetter(tk.LabelFrame):
             # save old values so we don't have to recompute FOV if we're just moving
             self.pa_as_drawn = pa
             self.ra_as_drawn, self.dec_as_drawn = self.ctr_ra_deg, self.ctr_dec_deg
-
-            self.canvas.update_canvas()
-            # self.fitsimage.set_draw_mode('edit')
-            # self.canvas.edit_select(obj)
         except Exception as err:
             errmsg = "failed to draw CCD: {}".format(str(err))
             self.logger.error(msg=errmsg)
+
+        try:
+            obj = self._make_compo(image)
+            obj.showcap = True
+            self.canvas.deleteObjectByTag('compo_overlay')
+            self.canvas.add(obj, tag='compo_overlay', redraw=False)
+            # rotate
+            obj.rotate(pa, self.ctr_x, self.ctr_y)
+        except Exception as err:
+            errmsg = "failed to draw COMPO: {}".format(str(err))
+            self.logger.error(msg=errmsg)
+
+        self.canvas.update_canvas()
 
     def create_blank_image(self):
         self.fitsimage.onscreen_message("Creating blank field...",
@@ -684,7 +705,7 @@ class FovSetter(tk.LabelFrame):
 
     def _load_image(self):
         try:
-            fov_deg = 2*max(self.fov_x, self.fov_y)
+            fov_deg = 5*max(self.fov_x, self.fov_y)
             ra_txt = self.ra.as_string()
             dec_txt = self.dec.as_string()
             # width and height are specified in arcmin
