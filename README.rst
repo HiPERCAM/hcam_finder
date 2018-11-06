@@ -20,7 +20,7 @@ hcam-finder
 
 Observation planning and finding charts for HiPERCAM
 
-**IMPORTANT: as of v0.4.8 hcam_finder has the correct rotator centre and
+**IMPORTANT: as of v0.5 hcam_finder has the correct rotator centre and
 offset for the GTC. If you installed prior to this, make sure you delete the
 config file `~/.hfinder/config` and update to the latest version.**
 
