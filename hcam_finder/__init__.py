@@ -2,6 +2,6 @@
 
 __author__ = """Stuart Littlefair"""
 __email__ = 's.littlefair@shef.ac.uk'
-__version__ = '0.5.0'
+__version__ = '1.0.0'
 
 from .hcam_finder import *

@@ -29,7 +29,7 @@ scripts = [fname for fname in glob.glob(os.path.join('scripts', '*'))
 
 setup(
     name='hcam_finder',
-    version='0.5.0',
+    version='1.0.0',
     description="Observation planning and finding charts for HiPerCAM",
     long_description=readme + '\n\n' + history,
     author="Stuart Littlefair",
