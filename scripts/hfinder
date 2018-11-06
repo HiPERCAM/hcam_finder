@@ -155,6 +155,11 @@ class FitsViewer(tk.Tk):
         # target widget
         self.target = FovSetter(self, self.fitsimage, logger)
 
+        # enable 'n' key as binding for next dither position
+        def n_press(event):
+            self.target._step_ccd()
+        self.bind('<n>', n_press)
+
         # add additional callback to instpars widgets to redraw CCD on change
         widgets_to_fix = [self.globals.ipars.app,
                           self.globals.ipars.drift_frame.npair,

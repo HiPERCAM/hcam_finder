@@ -236,6 +236,9 @@ class FovSetter(tk.LabelFrame):
             self.bank.addImageServer(obj)
         self.tmpdir = tempfile.mkdtemp()
 
+        # current dither index
+        self.dither_index = 0
+
         # catalog servers
         """
         for longname in conesearch.list_catalogs():
@@ -463,6 +466,42 @@ class FovSetter(tk.LabelFrame):
             self.pa_as_drawn = pa
         except:
             self.draw_ccd(*args)
+
+    def _step_ccd(self):
+        """
+        Move CCD to next nod position
+        """
+        g = get_root(self).globals
+        try:
+            np = g.ipars.nodPattern
+            if not np:
+                raise ValueError('no nod pattern defined')
+            nd = len(np['ra'])
+            di = self.dither_index % nd
+            raoff = np['ra'][di]
+            decoff = np['dec'][di]
+            self.dither_index += 1
+        except Exception as err:
+            self.logger.warn('could not get dither position {}: {}'.format(di, str(err)))
+            return
+
+        self.logger.info('moving CCD to dither position {:d} ({} {})'.format(
+            di, raoff, decoff
+        ))
+
+        # get new dither cen
+        ra, dec = wcs.add_offset_radec(
+            self.ctr_ra_deg, self.ctr_dec_deg,
+            raoff/3600., decoff/3600.)
+        image = self.fitsimage.get_image()
+        xc, yc = image.radectopix(self.ra_as_drawn, self.dec_as_drawn)
+        xn, yn = image.radectopix(ra, dec)
+        # update latest dither centre
+        self.ra_as_drawn, self.dec_as_drawn = ra, dec
+
+        obj = self.canvas.get_object_by_tag('ccd_overlay')
+        obj.move_delta(xn-xc, yn-yc)
+        self.canvas.update_canvas()
 
     def _chip_cen(self):
         """
