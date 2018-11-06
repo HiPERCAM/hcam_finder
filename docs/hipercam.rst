@@ -127,12 +127,12 @@ Overscan
 
 .. _nod:
 
-Nodding the Telescope
+Dithering the Telescope
 ---------------------
 
-It is possible to nod the telescope between frames. This can be useful if, for example, you
+It is possible to dither the telescope between frames. This can be useful if, for example, you
 want to make a flat-field directly from the night sky observations themselves. :ref:`clear_mode`
-is always enabled when nodding the telescope, to avoid trails from bright stars appearing
+is always enabled when dithering the telescope, to avoid trails from bright stars appearing
 in the image.
 
 The overheads involved in moving the telescope mean that there is little point in
@@ -148,7 +148,8 @@ simple list of *absolute* RA, Dec offsets in arcseconds as shown below::
     20 0
     0  20
 
-This offset pattern will be repeated until your exposures are finished. At the moment,
-there is no way to display the nodding pattern in ``hfinder`` itself, but ``hfinder``
-will estimate the impact of nodding on your cadence and overal signal-to-noise. Until
-HiPERCAM is commissioned on-sky, these estimates will be quite crude.
+This offset pattern will be repeated until your exposures are finished. ``hfinder``
+will estimate the impact of nodding on your cadence and overal signal-to-noise.
+
+If you wish to visualise the dithering pattern on the sky, pressing the ``n`` key
+will cycle through the dithering pattern.
