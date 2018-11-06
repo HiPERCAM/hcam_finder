@@ -8,6 +8,8 @@ if not six.PY3:
 else:
     from tkinter import filedialog
 
+from . import __version__ as version
+
 # let's see which image library we have
 have_pillow = True
 try:
@@ -54,8 +56,8 @@ def make_finder_pillow(logger, fname, img_array, object_name, tel, ra, dec, pa, 
     if not object_name:
         raise ValueError('you should supply an object name')
 
-    info_msg = "{object_name} ({tel})\n{ra} {dec}\nPA = {pa:.1f}\n{wins:s}".format(
-        object_name=object_name, tel=tel, ra=ra, dec=dec, pa=pa, wins=wins
+    info_msg = "{object_name} ({tel})\n{ra} {dec}\nPA = {pa:.1f}\n{wins:s}\nv{version}".format(
+        object_name=object_name, tel=tel, ra=ra, dec=dec, pa=pa, wins=wins, version=version
     )
     font_size = 5
     font_file = pkg_resources.resource_filename('hcam_finder', 'data/Lato-Regular.ttf')
