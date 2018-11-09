@@ -577,7 +577,6 @@ class FovSetter(tk.LabelFrame):
         )]
         vline = Path(points, color='red', linestyle='dash', linewidth=2)
 
-
         # list of objects for compound object
         obl = [mainCCD, hline, vline]
 
