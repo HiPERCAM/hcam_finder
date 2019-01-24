@@ -667,20 +667,20 @@ class FovSetter(tk.LabelFrame):
             errmsg = "failed to draw CCD: {}".format(str(err))
             self.logger.error(msg=errmsg)
 
-        #try:
-        g = get_root(self).globals
-        if g.ipars.compo():
-            obj = self._make_compo(image)
-            obj.showcap = True
-            self.canvas.deleteObjectByTag('compo_overlay')
-            self.canvas.add(obj, tag='compo_overlay', redraw=False)
-            # rotate
-            obj.rotate(pa, self.ctr_x, self.ctr_y)
-        else:
-            self.canvas.deleteObjectByTag('compo_overlay')
-        #except Exception as err:
-        #    errmsg = "failed to draw COMPO: {}".format(str(err))
-        #    self.logger.error(msg=errmsg)
+        try:
+            g = get_root(self).globals
+            if g.ipars.compo():
+                obj = self._make_compo(image)
+                obj.showcap = True
+                self.canvas.deleteObjectByTag('compo_overlay')
+                self.canvas.add(obj, tag='compo_overlay', redraw=False)
+                # rotate
+                obj.rotate(pa, self.ctr_x, self.ctr_y)
+            else:
+                self.canvas.deleteObjectByTag('compo_overlay')
+        except Exception as err:
+            errmsg = "failed to draw COMPO: {}".format(str(err))
+            self.logger.error(msg=errmsg)
 
         self.canvas.update_canvas()
 
