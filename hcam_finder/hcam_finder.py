@@ -20,7 +20,8 @@ import hcam_widgets.widgets as w
 from hcam_widgets.tkutils import get_root
 
 from .finding_chart import make_finder
-from .shapes import CCDWin, CompoPatrolArc, CompoFreeRegion
+from .shapes import (CCDWin, CompoPatrolArc, CompoFreeRegion,
+                     CompoPickoffArm, CompoInjectorArm)
 
 has_astroquery = True
 try:
@@ -600,14 +601,38 @@ class FovSetter(tk.LabelFrame):
         return obj
 
     def _make_compo(self, image):
+        # get COMPO widget from main GUI
+        g = get_root(self).globals
+
+        compo_angle = g.compo_hw.pickoff_angle.value()
+        compo_side = g.compo_hw.injection_side.value()
+
+        # get chip coordinates - COMPO is aligned to chip
+        chip_ctr_ra, chip_ctr_dec = self._chip_cen()
+        xright, ytop = wcs.add_offset_radec(chip_ctr_ra, chip_ctr_dec,
+                                            self.fov_x/2, self.fov_y/2)
+        xleft, ybot = wcs.add_offset_radec(chip_ctr_ra, chip_ctr_dec,
+                                           -self.fov_x/2, -self.fov_y/2)
+
+        if compo_side == 'R':
+            corner = (xright, ybot)
+        else:
+            corner = (xleft, ybot)
+
         # add COMPO components
-        compo_arc = CompoPatrolArc(self.ctr_ra_deg, self.ctr_dec_deg, image,
-                                   fill=True, fillcolor='yellow', fillalpha=0.3,
+        compo_arc = CompoPatrolArc(chip_ctr_ra, chip_ctr_dec, image,
+                                   linewidth=10, color='black', linestyle='dash',
                                    name='COMPO_Arc')
-        compo_free = CompoFreeRegion(self.ctr_ra_deg, self.ctr_dec_deg, image,
-                                     fill=True, fillcolor='green', fillalpha=0.3,
+        compo_free = CompoFreeRegion(chip_ctr_ra, chip_ctr_dec, image,
+                                     fill=True, fillcolor='green', fillalpha=0.1,
                                      name='compo_free_region')
-        obl = [compo_arc, compo_free]
+        compo_pickoff = CompoPickoffArm(chip_ctr_ra, chip_ctr_dec, compo_angle, image,
+                                        fill=True, fillcolor='yellow', fillalpha=0.3,
+                                        name='COMPO_pickoff')
+
+        compo_injector = CompoInjectorArm(corner, compo_side, image, color='yellow',
+                                          fillalpha=0.3, fill=True, name='COMPO_injector')
+        obl = [compo_arc, compo_free, compo_pickoff, compo_injector]
         obj = CompoundObject(*obl)
         obj.editable = True
         return obj
@@ -642,16 +667,20 @@ class FovSetter(tk.LabelFrame):
             errmsg = "failed to draw CCD: {}".format(str(err))
             self.logger.error(msg=errmsg)
 
-        try:
+        #try:
+        g = get_root(self).globals
+        if g.ipars.compo():
             obj = self._make_compo(image)
             obj.showcap = True
             self.canvas.deleteObjectByTag('compo_overlay')
             self.canvas.add(obj, tag='compo_overlay', redraw=False)
             # rotate
             obj.rotate(pa, self.ctr_x, self.ctr_y)
-        except Exception as err:
-            errmsg = "failed to draw COMPO: {}".format(str(err))
-            self.logger.error(msg=errmsg)
+        else:
+            self.canvas.deleteObjectByTag('compo_overlay')
+        #except Exception as err:
+        #    errmsg = "failed to draw COMPO: {}".format(str(err))
+        #    self.logger.error(msg=errmsg)
 
         self.canvas.update_canvas()
 

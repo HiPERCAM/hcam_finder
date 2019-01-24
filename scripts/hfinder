@@ -19,6 +19,7 @@ import hcam_widgets.tkutils as tkutils
 from hcam_widgets.globals import Container
 import hcam_widgets.widgets as w
 from hcam_widgets import hcam
+from hcam_widgets import compo
 
 from hcam_finder.config import (load_config, write_config,
                                 check_user_dir)
@@ -107,6 +108,9 @@ class FitsViewer(tk.Tk):
         # counts and S/N frame. Also displayed!
         self.globals.count = hcam.CountsFrame(self)
 
+        # COMPO HW control widget. Not shown initially, but raised when COMPO used
+        self.globals.compo_hw = compo.COMPOSetupWidget(self)
+
         # container canvas
         viewerFrame = tk.Canvas(self, bg="grey", height=600, width=600)
         # GINGA Image view
@@ -141,7 +145,7 @@ class FitsViewer(tk.Tk):
         bd.enable_cmap(True)
         bd.enable_rotate(True)
 
-        # disable orient binding
+        # disable orientation binding
         def no_orient(viewer, righthand, msg):
             pass
         bd._orient = no_orient
@@ -177,18 +181,23 @@ class FitsViewer(tk.Tk):
         widgets_to_fix.extend((ys for ys in self.globals.ipars.quad_frame.ys))
         widgets_to_fix.extend((nx for nx in self.globals.ipars.quad_frame.nx))
         widgets_to_fix.extend((ny for ny in self.globals.ipars.quad_frame.ny))
+        widgets_to_fix.extend([self.globals.compo_hw.pickoff_angle,
+                               self.globals.ipars.compo,
+                               self.globals.compo_hw.injection_side])
 
         def new_check(*args):
             try:
                 self.target.draw_ccd(*args)
-            except:
+            except Exception:
                 pass
             return self.globals.ipars.check(*args)
 
         for widget in widgets_to_fix:
             widget.checker = new_check
-        # radio button
+        # radio buttons
         widgets_to_fix[0].val.trace('w', new_check)
+        widgets_to_fix[-1].val.trace('w', new_check)
+        widgets_to_fix[-2].val.trace('w', new_check)
 
         # now layout
         self.target.grid(row=0, column=0, sticky=tk.W+tk.N, padx=10, pady=3)
