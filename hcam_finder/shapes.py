@@ -5,7 +5,7 @@ from astropy.coordinates import CartesianRepresentation, SphericalRepresentation
 
 from ginga import trcalc
 from ginga.util import wcs
-from ginga.canvas.types.all import Polygon, Path, CompoundObject, Circle
+from ginga.canvas.types.all import Polygon, Path, CompoundObject, Circle, Box
 from ginga.util.bezier import get_bezier
 
 from hcam_widgets.compo import (PICKOFF_SIZE, MIRROR_SIZE, field_stop_centre,
@@ -94,12 +94,13 @@ class CompoPickoffArm(CompoundObject):
         self.dec_cen = compo_dec_cen
         self.cen_x, self.cen_y = image.radectopix(self.ra_cen, self.dec_cen)
 
-        pos = PICKOFF_SIZE.to(u.deg).value/2.
+        baffle_x = (542 * 0.08086 * u.arcsec).to(u.deg).value
+        baffle_y = (664 * 0.08086 * u.arcsec).to(u.deg).value
         points_wcs = (
-            wcs.add_offset_radec(compo_ra_cen, compo_dec_cen, -pos, -20*pos),
-            wcs.add_offset_radec(compo_ra_cen, compo_dec_cen, -pos, pos),
-            wcs.add_offset_radec(compo_ra_cen, compo_dec_cen, pos, pos),
-            wcs.add_offset_radec(compo_ra_cen, compo_dec_cen, pos, -20*pos)
+            wcs.add_offset_radec(compo_ra_cen, compo_dec_cen, -baffle_x/2, -baffle_y/2),
+            wcs.add_offset_radec(compo_ra_cen, compo_dec_cen, -baffle_x/2, baffle_y/2),
+            wcs.add_offset_radec(compo_ra_cen, compo_dec_cen, baffle_x/2, baffle_y/2),
+            wcs.add_offset_radec(compo_ra_cen, compo_dec_cen, baffle_x/2, -baffle_y/2)
         )
         points = [image.radectopix(ra, dec) for (ra, dec) in points_wcs]
         points = trcalc.rotate_coord(points, [self.theta], (self.cen_x, self.cen_y))
