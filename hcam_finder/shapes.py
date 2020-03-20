@@ -127,7 +127,7 @@ class CompoPatrolArc(Path):
               image to plot Window on
         """
         # assume patrol arc of 90 degrees
-        theta = np.linspace(-80, 80, 40)*u.deg
+        theta = np.linspace(-65, 65, 40)*u.deg
 
         # circular arc, swapping dec sign
         X, Y = field_stop_centre(theta)
