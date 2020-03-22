@@ -1,15 +1,15 @@
 import pkg_resources
 import numpy as np
 from astropy import units as u
-from astropy.coordinates import CartesianRepresentation, SphericalRepresentation
 
 from ginga import trcalc
 from ginga.util import wcs
-from ginga.canvas.types.all import Polygon, Path, CompoundObject, Circle, Box
+from ginga.canvas.types.all import Polygon, Path, CompoundObject, Circle
 from ginga.util.bezier import get_bezier
 
 from hcam_widgets.compo import (PICKOFF_SIZE, MIRROR_SIZE, field_stop_centre,
-                                SHADOW_X, SHADOW_Y, INJECTOR_THETA)
+                                SHADOW_X, SHADOW_Y, INJECTOR_THETA,
+                                gtc_focalplane_equivalencies)
 
 
 class CCDWin(Polygon):
@@ -48,24 +48,30 @@ class CompoInjectorArm(CompoundObject):
         Shape for drawing injector mirror for COMPO
         """
         cx, cy = corner
-        yoff = SHADOW_Y - SHADOW_X*np.tan(INJECTOR_THETA) + SHADOW_Y*np.tan(INJECTOR_THETA)**2
+        with u.set_enabled_equivalencies(gtc_focalplane_equivalencies):
+            yoff = SHADOW_Y - SHADOW_X*np.tan(INJECTOR_THETA) + SHADOW_Y*np.tan(INJECTOR_THETA)**2
+            yoff = yoff.to_value(u.deg)
+            baffle_x = SHADOW_X.to_value(u.deg)
+            baffle_y = SHADOW_Y.to_value(u.deg)
+            fov_radius = PICKOFF_SIZE.to_value(u.deg)/2.
+
         if side == 'L':
             mul = -1
         else:
             mul = 1
 
         p1 = (cx, cy)
-        p2 = wcs.add_offset_radec(cx, cy, -mul*SHADOW_X.to(u.deg).value, 0.0)
-        p3 = wcs.add_offset_radec(p2[0], p2[1], mul*(SHADOW_Y*np.tan(INJECTOR_THETA)).to(u.deg).value,
-                                  SHADOW_Y.to(u.deg).value)
-        p4 = wcs.add_offset_radec(cx, cy, 0, yoff.to(u.deg).value)
+        p2 = wcs.add_offset_radec(cx, cy, -mul*baffle_x, 0.0)
+        p3 = wcs.add_offset_radec(p2[0], p2[1], mul*(baffle_y*np.tan(INJECTOR_THETA)),
+                                  baffle_y)
+        p4 = wcs.add_offset_radec(cx, cy, 0, yoff)
 
         points_wcs = (p1, p2, p3, p4)
         vignetting = Polygon(points_wcs, coord='wcs', **params)
 
-        circle_y = cy + PICKOFF_SIZE.to(u.deg).value/2
-        circle_x = cx - mul * PICKOFF_SIZE.to(u.deg).value/2
-        mirror = Circle(circle_x, circle_y, MIRROR_SIZE.to(u.deg).value/2, coord='wcs', **params)
+        circle_y = cy + fov_radius
+        circle_x = cx - mul * fov_radius
+        mirror = Circle(circle_x, circle_y, fov_radius, coord='wcs', **params)
         super(CompoInjectorArm, self).__init__(vignetting, mirror)
 
         self.name = params.pop('name', 'injector')
@@ -86,16 +92,19 @@ class CompoPickoffArm(CompoundObject):
             image to plot Window on
         """
         X, Y = field_stop_centre(compo_theta_deg*u.deg)
-        compo_ra_cen, compo_dec_cen = wcs.add_offset_radec(
-            ra_ctr_deg, dec_ctr_deg, X.to(u.deg).value, -Y.to(u.deg).value
-        )
+        with u.set_enabled_equivalencies(gtc_focalplane_equivalencies):
+            compo_ra_cen, compo_dec_cen = wcs.add_offset_radec(
+                ra_ctr_deg, dec_ctr_deg, X.to(u.deg).value, -Y.to(u.deg).value
+            )
         self.theta = compo_theta_deg
         self.ra_cen = compo_ra_cen
         self.dec_cen = compo_dec_cen
         self.cen_x, self.cen_y = image.radectopix(self.ra_cen, self.dec_cen)
 
-        baffle_x = (542 * 0.08086 * u.arcsec).to(u.deg).value
-        baffle_y = (664 * 0.08086 * u.arcsec).to(u.deg).value
+        with u.set_enabled_equivalencies(gtc_focalplane_equivalencies):
+            baffle_x = SHADOW_X.to_value(u.deg)
+            baffle_y = SHADOW_Y.to_value(u.deg)
+
         points_wcs = (
             wcs.add_offset_radec(compo_ra_cen, compo_dec_cen, -baffle_x/2, -baffle_y/2),
             wcs.add_offset_radec(compo_ra_cen, compo_dec_cen, -baffle_x/2, baffle_y/2),
@@ -107,7 +116,9 @@ class CompoPickoffArm(CompoundObject):
         baffle = Polygon(points, **params)
 
         # pixel coord for circle
-        radius_pix = image.calc_radius_xy(self.cen_x, self.cen_y, MIRROR_SIZE.to(u.deg).value/2.)
+        with u.set_enabled_equivalencies(gtc_focalplane_equivalencies):
+            fov_radius = MIRROR_SIZE.to_value(u.deg)/2.
+        radius_pix = image.calc_radius_xy(self.cen_x, self.cen_y, fov_radius)
         mirror = Circle(self.cen_x, self.cen_y, radius_pix, **params)
 
         super(CompoPickoffArm, self).__init__(baffle, mirror)
@@ -133,7 +144,8 @@ class CompoPatrolArc(Path):
         X, Y = field_stop_centre(theta)
         points = u.Quantity([X, -Y])
         # transform to shape (N, 2) and units of degrees
-        points = points.T.to(u.deg).value
+        with u.set_enabled_equivalencies(gtc_focalplane_equivalencies):
+            points = points.T.to_value(u.deg)
         # add offsets to pointing center
         points_wcs = [
             wcs.add_offset_radec(ra_ctr_deg, dec_ctr_deg, p[0], p[1])
