@@ -19,7 +19,7 @@ import hcam_widgets.tkutils as tkutils
 from hcam_widgets.globals import Container
 import hcam_widgets.widgets as w
 from hcam_widgets import hcam
-from hcam_widgets import compo
+from hcam_widgets.compo import widgets as compo_widgets
 
 from hcam_finder.config import (load_config, write_config,
                                 check_user_dir)
@@ -96,6 +96,11 @@ class FitsViewer(tk.Tk):
         # initialised first.
         self.globals.clog = w.LabelGuiLogger('CMM', self, 5, 56, 'Command log')
         self.globals.rlog = w.LabelGuiLogger('RSP', self, 5, 56, 'Response log')
+        # we don't want these warnings - a lot are irrelavent when not running the instrument
+        for handler in self.globals.clog._log.handlers:
+            handler.setLevel(logging.ERROR)
+        for handler in self.globals.rlog._log.handlers:
+            handler.setLevel(logging.ERROR)
 
         # This one is actually displayed!
         # Instrument params
@@ -109,7 +114,7 @@ class FitsViewer(tk.Tk):
         self.globals.count = hcam.CountsFrame(self)
 
         # COMPO HW control widget. Not shown initially, but raised when COMPO used
-        self.globals.compo_hw = compo.COMPOSetupWidget(self)
+        self.globals.compo_hw = compo_widgets.COMPOSetupWidget(self)
 
         # container canvas
         viewerFrame = tk.Canvas(self, bg="grey", height=600, width=600)
@@ -181,9 +186,9 @@ class FitsViewer(tk.Tk):
         widgets_to_fix.extend((ys for ys in self.globals.ipars.quad_frame.ys))
         widgets_to_fix.extend((nx for nx in self.globals.ipars.quad_frame.nx))
         widgets_to_fix.extend((ny for ny in self.globals.ipars.quad_frame.ny))
-        widgets_to_fix.extend([self.globals.compo_hw.pickoff_angle,
+        widgets_to_fix.extend([self.globals.compo_hw.setup_frame.pickoff_angle,
                                self.globals.ipars.compo,
-                               self.globals.compo_hw.injection_side])
+                               self.globals.compo_hw.setup_frame.injection_side])
 
         def new_check(*args):
             try:

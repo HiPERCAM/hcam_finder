@@ -2,14 +2,11 @@ import pkg_resources
 import numpy as np
 from astropy import units as u
 
-from ginga import trcalc
 from ginga.util import wcs
-from ginga.canvas.types.all import Polygon, Path, CompoundObject, Circle
+from ginga.canvas.types.all import Polygon, Path
 from ginga.util.bezier import get_bezier
 
-from hcam_widgets.compo import (PICKOFF_SIZE, MIRROR_SIZE, field_stop_centre,
-                                SHADOW_X, SHADOW_Y, INJECTOR_THETA,
-                                gtc_focalplane_equivalencies)
+from hcam_widgets.compo.utils import field_stop_centre, gtc_focalplane_equivalencies
 
 
 class CCDWin(Polygon):
@@ -40,89 +37,6 @@ class CCDWin(Polygon):
         self.points = [image.radectopix(ra, dec) for (ra, dec) in points_wcs]
         super(CCDWin, self).__init__(self.points, **params)
         self.name = params.pop('name', 'window')
-
-
-class CompoInjectorArm(CompoundObject):
-    def __init__(self, corner, side, image, **params):
-        """
-        Shape for drawing injector mirror for COMPO
-        """
-        cx, cy = corner
-        with u.set_enabled_equivalencies(gtc_focalplane_equivalencies):
-            yoff = SHADOW_Y - SHADOW_X*np.tan(INJECTOR_THETA) + SHADOW_Y*np.tan(INJECTOR_THETA)**2
-            yoff = yoff.to_value(u.deg)
-            baffle_x = SHADOW_X.to_value(u.deg)
-            baffle_y = SHADOW_Y.to_value(u.deg)
-            fov_radius = PICKOFF_SIZE.to_value(u.deg)/2.
-
-        if side == 'L':
-            mul = -1
-        else:
-            mul = 1
-
-        p1 = (cx, cy)
-        p2 = wcs.add_offset_radec(cx, cy, -mul*baffle_x, 0.0)
-        p3 = wcs.add_offset_radec(p2[0], p2[1], mul*(baffle_y*np.tan(INJECTOR_THETA)),
-                                  baffle_y)
-        p4 = wcs.add_offset_radec(cx, cy, 0, yoff)
-
-        points_wcs = (p1, p2, p3, p4)
-        vignetting = Polygon(points_wcs, coord='wcs', **params)
-
-        circle_y = cy + fov_radius
-        circle_x = cx - mul * fov_radius
-        mirror = Circle(circle_x, circle_y, fov_radius, coord='wcs', **params)
-        super(CompoInjectorArm, self).__init__(vignetting, mirror)
-
-        self.name = params.pop('name', 'injector')
-
-
-class CompoPickoffArm(CompoundObject):
-    def __init__(self, ra_ctr_deg, dec_ctr_deg, compo_theta_deg, image, **params):
-        """
-        Shape for drawing pickoff mirror
-
-        Parameters
-        ----------
-        ra_ctr_deg, dec_ctr_deg : float
-            Tel pointing center (deg)
-        compo_theta_deg : float
-            Rotation angle of compo pickoff arm (deg)
-        image : `~ginga.AstroImage`
-            image to plot Window on
-        """
-        X, Y = field_stop_centre(compo_theta_deg*u.deg)
-        with u.set_enabled_equivalencies(gtc_focalplane_equivalencies):
-            compo_ra_cen, compo_dec_cen = wcs.add_offset_radec(
-                ra_ctr_deg, dec_ctr_deg, X.to(u.deg).value, -Y.to(u.deg).value
-            )
-        self.theta = compo_theta_deg
-        self.ra_cen = compo_ra_cen
-        self.dec_cen = compo_dec_cen
-        self.cen_x, self.cen_y = image.radectopix(self.ra_cen, self.dec_cen)
-
-        with u.set_enabled_equivalencies(gtc_focalplane_equivalencies):
-            baffle_x = SHADOW_X.to_value(u.deg)
-            baffle_y = SHADOW_Y.to_value(u.deg)
-
-        points_wcs = (
-            wcs.add_offset_radec(compo_ra_cen, compo_dec_cen, -baffle_x/2, -baffle_y/2),
-            wcs.add_offset_radec(compo_ra_cen, compo_dec_cen, -baffle_x/2, baffle_y/2),
-            wcs.add_offset_radec(compo_ra_cen, compo_dec_cen, baffle_x/2, baffle_y/2),
-            wcs.add_offset_radec(compo_ra_cen, compo_dec_cen, baffle_x/2, -baffle_y/2)
-        )
-        points = [image.radectopix(ra, dec) for (ra, dec) in points_wcs]
-        points = trcalc.rotate_coord(points, [self.theta], (self.cen_x, self.cen_y))
-        baffle = Polygon(points, **params)
-
-        # pixel coord for circle
-        with u.set_enabled_equivalencies(gtc_focalplane_equivalencies):
-            fov_radius = MIRROR_SIZE.to_value(u.deg)/2.
-        radius_pix = image.calc_radius_xy(self.cen_x, self.cen_y, fov_radius)
-        mirror = Circle(self.cen_x, self.cen_y, radius_pix, **params)
-
-        super(CompoPickoffArm, self).__init__(baffle, mirror)
-        self.name = params.pop('name', 'pickoff')
 
 
 class CompoPatrolArc(Path):

@@ -17,11 +17,11 @@ from astropy.coordinates import SkyCoord
 from astropy.coordinates.name_resolve import NameResolveError
 
 import hcam_widgets.widgets as w
+from hcam_widgets.compo.utils import (InjectionArm, PickoffArm, INJECTOR_THETA, PARK_POSITION)
 from hcam_widgets.tkutils import get_root
 
 from .finding_chart import make_finder
-from .shapes import (CCDWin, CompoPatrolArc, CompoFreeRegion,
-                     CompoPickoffArm, CompoInjectorArm)
+from .shapes import (CCDWin, CompoPatrolArc, CompoFreeRegion)
 
 has_astroquery = True
 try:
@@ -604,20 +604,18 @@ class FovSetter(tk.LabelFrame):
         # get COMPO widget from main GUI
         g = get_root(self).globals
 
-        compo_angle = g.compo_hw.pickoff_angle.value()
-        compo_side = g.compo_hw.injection_side.value()
+        compo_angle = g.compo_hw.setup_frame.pickoff_angle.value()
+        compo_side = g.compo_hw.setup_frame.injection_side.value()
 
         # get chip coordinates - COMPO is aligned to chip
         chip_ctr_ra, chip_ctr_dec = self._chip_cen()
-        xright, ytop = wcs.add_offset_radec(chip_ctr_ra, chip_ctr_dec,
-                                            self.fov_x/2, self.fov_y/2)
-        xleft, ybot = wcs.add_offset_radec(chip_ctr_ra, chip_ctr_dec,
-                                           -self.fov_x/2, -self.fov_y/2)
 
         if compo_side == 'R':
-            corner = (xright, ybot)
+            ia = -INJECTOR_THETA
+        elif compo_side == 'L':
+            ia = INJECTOR_THETA
         else:
-            corner = (xleft, ybot)
+            ia = PARK_POSITION
 
         # add COMPO components
         compo_arc = CompoPatrolArc(chip_ctr_ra, chip_ctr_dec, image,
@@ -626,12 +624,15 @@ class FovSetter(tk.LabelFrame):
         compo_free = CompoFreeRegion(chip_ctr_ra, chip_ctr_dec, image,
                                      fill=True, fillcolor='green', fillalpha=0.1,
                                      name='compo_free_region')
-        compo_pickoff = CompoPickoffArm(chip_ctr_ra, chip_ctr_dec, compo_angle, image,
-                                        fill=True, fillcolor='yellow', fillalpha=0.3,
-                                        name='COMPO_pickoff')
 
-        compo_injector = CompoInjectorArm(corner, compo_side, image, color='yellow',
-                                          fillalpha=0.3, fill=True, name='COMPO_injector')
+        compo_pickoff = PickoffArm().to_ginga_object(compo_angle*u.deg, chip_ctr_ra*u.deg, chip_ctr_dec*u.deg,
+                                                     fill=True, fillcolor='yellow', fillalpha=0.3,
+                                                     name='COMPO_pickoff')
+
+        compo_injector = InjectionArm().to_ginga_object(ia, chip_ctr_ra*u.deg, chip_ctr_dec*u.deg,
+                                                        color='yellow', fillalpha=0.3, fill=True,
+                                                        name='COMPO_injector')
+
         obl = [compo_arc, compo_free, compo_pickoff, compo_injector]
         obj = CompoundObject(*obl)
         obj.editable = True
