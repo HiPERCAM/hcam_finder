@@ -74,7 +74,7 @@ class FitsViewer(tk.Tk):
         self.logger = logger
 
         # add a container object
-        self.globals = Container()
+        self.globals = Container(telescope_names=['WHT', 'GTC'])
         self.globals.cpars = dict()
         load_config(self.globals)
         self.globals.cpars['file_logging_on'] = 0
