@@ -713,19 +713,28 @@ class FovSetter(tk.LabelFrame):
         self.after(1000, self._check_image_load, t)
 
     def _check_image_load(self, t):
-        if t.isAlive():
+        if t.is_alive():
             self.logger.debug(msg='checking if image has arrrived')
             self.after(500, self._check_image_load, t)
         else:
             # load image into viewer
+            if self.imfilepath is None:
+                # no image from server
+                msg = 'No image for this location in {}'.format(
+                    self.servername
+                )
+                self.fitsimage.onscreen_message(msg)
+                return
+
             try:
                 get_root(self).load_file(self.imfilepath)
             except Exception as err:
-                errmsg = "failed to load file {}: {}".format(
+                errmsg = "failed to load file {}:\n{}".format(
                     self.imfilepath,
                     str(err)
                 )
                 self.logger.error(msg=errmsg)
+                self.fitsimage.onscreen_message(errmsg)
             else:
                 self.draw_ccd()
                 self.targetMarker()
@@ -754,6 +763,7 @@ class FovSetter(tk.LabelFrame):
         except Exception as err:
             errmsg = "Failed to download sky image: {}".format(str(err))
             self.logger.error(msg=errmsg)
+            self.imfilepath = None
             return
 
         self.imfilepath = dstpath
