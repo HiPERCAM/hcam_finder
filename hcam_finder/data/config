@@ -112,6 +112,6 @@ rotcen_y = 559.5
 # is image flipped E-W?
 flipEW = False
 # does increasing PA rotate towards east from north?
-EofN = False
+EofN = True
 # rotator position in degrees when chip runs N-S
 paOff = 0.4
