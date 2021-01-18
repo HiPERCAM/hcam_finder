@@ -16,10 +16,8 @@ from .finders import FovSetter
 from .shapes import (CompoPatrolArc, CompoFreeRegion)
 
 if not six.PY3:
-    import Tkinter as tk
     import tkFileDialog as filedialog
 else:
-    import tkinter as tk
     from tkinter import filedialog
 
 

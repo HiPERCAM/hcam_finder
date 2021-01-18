@@ -116,7 +116,11 @@ class FovSetter(tk.LabelFrame):
         """
         This is an abstract class for a widget for displaying images and CCD setups.
 
-        fitsimage is reverence to ImageViewCanvas
+        fitsimage is reverence to ImageViewCanvas.
+
+        Normally, concrete classes will only have to implement _make_ccd and window_string.
+        More complex concrete classes may have to also change the overlay names and provide
+        a custom draw_ccd method.
         """
         tk.LabelFrame.__init__(self, master, pady=2, text='Object')
 

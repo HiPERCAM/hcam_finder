@@ -1,0 +1,317 @@
+#!/usr/bin/env python
+#
+# This is open-source software licensed under a BSD license.
+# Please see the file LICENSE.txt for details.
+#
+from __future__ import print_function, absolute_import, unicode_literals, division
+from functools import partial
+import logging
+import six
+from distutils.version import LooseVersion
+
+import ginga
+from ginga import AstroImage
+from ginga import imap
+from ginga.tkw.ImageViewTk import ImageViewCanvas
+from ginga.canvas.types.astro import Compass
+
+import hcam_widgets.tkutils as tkutils
+from hcam_widgets.globals import Container
+import hcam_widgets.widgets as w
+from hcam_widgets.uspec import InstPars, CountsFrame
+
+from hcam_finder.config import (load_config, write_config,
+                                check_user_dir)
+from hcam_finder.uspec_finder import USPECFovSetter
+from hcam_finder.finders import TelChooser
+
+if not six.PY3:
+    import Tkinter as tk
+    import tkFileDialog as filedialog
+else:
+    import tkinter as tk
+    from tkinter import filedialog
+
+OLD_GINGA = LooseVersion(ginga.__version__) <= LooseVersion('2.7.1')
+STD_FORMAT = '%(asctime)s | %(levelname)1.1s | %(filename)s:%(lineno)d (%(funcName)s) | %(message)s'
+
+
+def format_tips(font, desired_width):
+    """
+    Create a formatted tips string, that fits inside the desired_width
+    """
+    str = """
+    -: zoom out,&+: zoom in,&q: enable pan mode,&r: enter rotate mode,&
+    R: restore rotation,&I: invert color map,&
+    t: enter contrast mode (control contrast with mouse),&T: restore contrast,&
+    see http://ginga.readthedocs.io/en/latest/quickref.html for more"""
+    # remove all line breaks first
+    str = ' '.join(str.split())
+    w = font.measure(str)
+
+    # does it fit?
+    if w <= desired_width:
+        return str
+
+    fragments = str.split('&')
+    lines = []
+    currline = ''
+    for fragment in fragments:
+        w = font.measure(currline + fragment + ' ')
+        if w > desired_width:
+            lines.append(currline)
+            currline = fragment + ' '
+        else:
+            currline += fragment + ' '
+    lines.append(currline)
+    return '\n'.join(lines)
+
+
+class FitsViewer(tk.Tk):
+
+    def __init__(self, logger):
+        tk.Tk.__init__(self)
+        self.logger = logger
+
+        # add a container object
+        self.globals = Container(telescope_names=['TNT'])
+        self.globals.cpars = dict()
+        load_config(self.globals)
+        # TODO: cruft from hdriver, remove
+        self.globals.cpars['file_logging_on'] = 0
+        self.globals.cpars['hcam_server_on'] = 0
+        self.globals.cpars['eso_server_online'] = False
+
+        # FIX THIS - should remember telescope name
+        self.globals.cpars['telins_name'] = 'TNT'
+
+        # make sure we've got a user dir to read/store configs from
+        check_user_dir(self.globals)
+
+        # style
+        tkutils.addStyle(self)
+        self.tk_focusFollowsMouse()
+
+        # Now we make the UltraSpec widgets
+        # including some widgets that will not be displayed,
+        # because the other widgets want to talk to them.
+        # The order here is determined by the fact that some widgets
+        # need to reference the simpler ones, so they have to
+        # initialised first.
+        self.globals.clog = w.LabelGuiLogger('CMM', self, 5, 56, 'Command log')
+        # we don't want these warnings - a lot are irrelavent when not running the instrument
+        for handler in self.globals.clog._log.handlers:
+            handler.setLevel(logging.ERROR)
+
+        # This one is actually displayed!
+        # Instrument params
+        self.globals.ipars = InstPars(self)
+
+        # counts and S/N frame. Also displayed!
+        self.globals.count = CountsFrame(self)
+
+        # container canvas
+        viewerFrame = tk.Canvas(self, bg="grey", height=600, width=600)
+        # GINGA Image view
+        fi = ImageViewCanvas(logger)
+        fi.set_widget(viewerFrame)
+        fi.enable_autocuts('on')
+        fi.set_autocut_params('zscale')
+        fi.enable_autozoom('on')
+        fi.set_imap(imap.get_imap('neg'))
+
+        fi.enable_draw(False)
+        fi.enable_edit(True)
+
+        fi.set_callback('none-move', self.motion)
+        fi.set_bg(0.2, 0.2, 0.2)
+        fi.enable_auto_orient('False')
+        fi.ui_setActive(True)
+        fi.show_pan_mark(True)
+        fi.show_mode_indicator(True)
+        fi.show_focus_indicator(True)
+
+        telins = self.globals.cpars['telins_name']
+        if self.globals.cpars[telins]['flipEW']:
+            fi.t_['flip_x'] = True
+        self.fitsimage = fi
+
+        bd = fi.get_bindings()
+        bd.enable_pan(True)
+        bd.enable_zoom(True)
+        bd.enable_cuts(True)
+        bd.enable_flip(False)
+        bd.enable_cmap(True)
+        bd.enable_rotate(True)
+
+        # disable orientation binding
+        def no_orient(viewer, righthand, msg):
+            pass
+        bd._orient = no_orient
+
+        fi.set_desired_size(600, 600)
+
+        tips = format_tips(self.globals.DEFAULT_FONT, 600)
+        self.readout = tk.Label(self, text='')
+        self.helpbox = tk.Label(self, text=tips, anchor=tk.W, justify=tk.LEFT)
+
+        # target widget
+        self.target = USPECFovSetter(self, self.fitsimage, logger)
+
+        # MenuBars
+        menubar = tk.Menu(self)
+        fileMenu = tk.Menu(menubar, tearoff=0)
+        fileMenu.add_command(label='Finding Chart', command=self.target.publish)
+        # telescope chooser
+        telChooser_cmd = partial(self.target.set_telins, g=self.globals)
+        telChooser = TelChooser(menubar, telChooser_cmd)
+
+        menubar.add_cascade(label='Telescope', menu=telChooser)
+        menubar.add_cascade(label='Save', menu=fileMenu)
+        self.config(menu=menubar)
+
+        # add additional callback to instpars widgets to redraw CCD on change
+        widgets_to_fix = [self.globals.ipars.app,
+                          self.globals.ipars.pframe.npair,
+                          self.globals.ipars.wframe.nwin]
+        widgets_to_fix.extend((xsl for xsl in self.globals.ipars.pframe.xsl))
+        widgets_to_fix.extend((xsr for xsr in self.globals.ipars.pframe.xsr))
+        widgets_to_fix.extend((ys for ys in self.globals.ipars.pframe.ys))
+        widgets_to_fix.extend((nx for nx in self.globals.ipars.pframe.nx))
+        widgets_to_fix.extend((ny for ny in self.globals.ipars.pframe.ny))
+
+        widgets_to_fix.extend((xs for xs in self.globals.ipars.wframe.xs))
+        widgets_to_fix.extend((ys for ys in self.globals.ipars.wframe.ys))
+        widgets_to_fix.extend((nx for nx in self.globals.ipars.wframe.nx))
+        widgets_to_fix.extend((ny for ny in self.globals.ipars.wframe.ny))
+
+        def new_check(*args):
+            try:
+                self.target.draw_ccd(*args)
+            except Exception:
+                pass
+            return self.globals.ipars.check(*args)
+
+        for widget in widgets_to_fix:
+            widget.checker = new_check
+        # radio buttons
+        widgets_to_fix[0].val.trace('w', new_check)
+        # widgets_to_fix[-1].val.trace('w', new_check)
+        # widgets_to_fix[-2].val.trace('w', new_check)
+
+        # now layout
+        self.target.grid(row=0, column=0, sticky=tk.W+tk.N, padx=10, pady=3)
+        self.globals.count.grid(row=1, column=0, sticky=tk.W+tk.N, padx=10, pady=3)
+        self.globals.ipars.grid(row=2, column=0, sticky=tk.W+tk.N, padx=10, pady=3)
+        viewerFrame.grid(row=0, column=1, sticky=tk.W+tk.N, padx=10, pady=3, rowspan=3)
+        self.readout.grid(row=3, column=1, sticky=tk.W+tk.N, padx=10, pady=3)
+        self.helpbox.grid(row=4, column=1, sticky=tk.W+tk.N, padx=10, pady=3)
+
+        # configure
+        self.title('usfinder')
+        self.protocol("WM_DELETE_WINDOW", self.quit)
+
+        # run checks
+        self.globals.ipars.check()
+        self.update()
+
+    def get_widget(self):
+        return self
+
+    def load_file(self, filepath):
+        self.update()
+        image = AstroImage.AstroImage(logger=self.logger)
+        image.load_file(filepath)
+
+        self.fitsimage.set_image(image)
+        self.draw_compass()
+
+    def draw_compass(self):
+        # create compass
+        try:
+            image = self.fitsimage.get_image()
+            if image is None:
+                return
+
+            try:
+                self.fitsimage.deleteObjectByTag('compass')
+            except KeyError:
+                pass
+
+            xp, yp = 0.9*image.width, 0.1*image.height
+            if OLD_GINGA:
+                x, y, xn, yn, xe, ye = image.calc_compass(xp, yp, 0.016, 0.016)
+                self.logger.info("x=%d y=%d xn=%d yn=%d xe=%d ye=%d" % (
+                    x, y, xn, yn, xe, ye))
+                radius = float(min(image.width, image.height)) * 0.1
+                compass = Compass(x, y, radius)
+            else:
+                compass = Compass(0.85, 0.85, 0.085, coord='percentage')
+
+            compass.color = 'red'
+            compass.fontsize = 14
+            self.fitsimage.add(compass, tag='compass')
+
+        except Exception as e:
+            self.logger.warning("Can't calculate compass: %s" % (
+                str(e)))
+
+    def open_file(self):
+        filename = filedialog.askopenfilename(filetypes=[("allfiles", "*"),
+                                                         ("fitsfiles", "*.fits")])
+        self.load_file(filename)
+
+    def motion(self, fitsimage, button, data_x, data_y):
+
+        # Get the value under the data coordinates
+        try:
+            # We report the value across the pixel, even though the coords
+            # change halfway across the pixel
+            value = fitsimage.get_data(int(data_x+0.5), int(data_y+0.5))
+        except Exception:
+            value = None
+
+        fits_x, fits_y = data_x + 1, data_y + 1
+        # Calculate WCS RA
+        try:
+            # NOTE: image function operates on DATA space coords
+            image = fitsimage.get_image()
+            if image is None:
+                # No image loaded
+                return
+            ra_txt, dec_txt = image.pixtoradec(fits_x, fits_y,
+                                               format='str', coords='fits')
+        except Exception as e:
+            self.logger.warning("Bad coordinate conversion: %s" % (
+                str(e)))
+            ra_txt = 'BAD WCS'
+            dec_txt = 'BAD WCS'
+
+        text = "RA: %s  DEC: %s  X: %.2f  Y: %.2f  Value: %s" % (
+            ra_txt, dec_txt, fits_x, fits_y, value)
+        self.readout.config(text=text)
+
+    def quit(self):
+        write_config(self.globals)
+        self.destroy()
+        return True
+
+
+def main():
+
+    logger = logging.getLogger("example1")
+    logger.setLevel(logging.INFO)
+    fmt = logging.Formatter(STD_FORMAT)
+    stderrHdlr = logging.StreamHandler()
+    stderrHdlr.setFormatter(fmt)
+    logger.addHandler(stderrHdlr)
+
+    fv = FitsViewer(logger)
+    top = fv.get_widget()
+    top.mainloop()
+
+
+if __name__ == "__main__":
+    main()
+
+# END

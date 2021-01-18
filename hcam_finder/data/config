@@ -89,3 +89,16 @@ flipEW = True
 EofN = True
 # rotator position in degrees when chip runs N-S
 paOff = 0
+
+[TNT]
+px_scale = 0.456
+nxtot = 1056
+nytot = 1072
+rotcen_x = 533.803
+rotcen_y = 540.431
+# is image flipped E-W?
+flipEW = True
+# does increasing PA rotate towards east from north?
+EofN = False
+# rotator position in degrees when chip runs N-S
+paOff = 270
