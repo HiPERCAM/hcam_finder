@@ -6,11 +6,11 @@ import os
 import validate
 
 
-def check_user_dir(g):
+def check_user_dir(g, app_name='hfinder'):
     """
     Check directories exist for saving apps/configs etc. Create if not.
     """
-    direc = os.path.expanduser('~/.hfinder')
+    direc = os.path.expanduser('~/.' + app_name)
     if not os.path.exists(direc):
         try:
             os.mkdir(direc)
@@ -18,7 +18,7 @@ def check_user_dir(g):
             g.clog.warn('Failed to make directory ' + str(err))
 
 
-def load_config(g):
+def load_config(g, app_name='hfinder', env_var='HCAM_FINDER_CONF'):
     """
     Populate application level globals from config file
     """
@@ -30,9 +30,9 @@ def load_config(g):
     # - ~/.hfinder directory
     # - package resources
     paths = []
-    if "HCAM_FINDER_CONF" in os.environ:
-        paths.append(os.environ["HCAM_FINDER_CONF"])
-    paths.append(os.path.expanduser('~/.hfinder/'))
+    if env_var in os.environ:
+        paths.append(os.environ[env_var])
+    paths.append(os.path.expanduser('~/.' + app_name))
     resource_dir = pkg_resources.resource_filename('hcam_finder', 'data')
     paths.append(resource_dir)
 
@@ -56,7 +56,7 @@ def load_config(g):
     g.cpars.update(config)
 
 
-def write_config(g):
+def write_config(g, app_name='hfinder'):
     """
     Dump application level globals to config file
     """
@@ -64,7 +64,7 @@ def write_config(g):
                                                       'data/configspec.ini')
     config = configobj.ConfigObj({}, configspec=configspec_file)
     config.update(g.cpars)
-    config.filename = os.path.expanduser('~/.hfinder/config')
+    config.filename = os.path.expanduser('~/.{}/config'.format(app_name))
     if not os.path.exists(config.filename):
         try:
             config.write()
