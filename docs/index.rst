@@ -18,6 +18,8 @@ Please see the :doc:`detailed usage instructions <usage>`
 
     usage
     hipercam
+    ultracam
+    ultraspec
 
 Indices and tables
 ------------------

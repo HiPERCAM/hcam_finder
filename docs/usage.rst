@@ -6,7 +6,9 @@ To start ``hfinder``, simply type::
 
     hfinder
 
-The main GUI window will display, shown below.
+Other finding chart tools are started in a similar way, e.g. ``ufinder`` to start the ULTRACAM
+tool and ``usfinder`` for the ULTRASPEC tool. The main GUI window will display, shown below
+(windows for all tools are similar).
 
 .. image:: images/main.png
     :alt: main gui window
@@ -53,8 +55,8 @@ for image display. For a fuller reference about interacting with the image area,
 Choosing an Instrument Setup
 ----------------------------
 
-``hfinder`` includes a panel that is used to configure the readout modes of HiPERCAM.
-This panel is shown below:
+Each finding chart tool includes a panel that is used to configure the instrument. For example, the
+instrument panel for ``hfinder`` is shown below:
 
 .. image:: images/inst.png
     :alt: instrument config panel
@@ -64,13 +66,17 @@ As you make changes to this panel, the displayed FoV will update to reflect your
 of readout mode and window settings. The exposure time, cadence and signal-to-noise
 estimates in the panel above will also update.
 
-Use this panel to select an instrument setup that best suits your observing needs. For a
-description of the various settings and HiPERCAM's available modes, see
-:doc:`Using HiPERCAM <hipercam>`.
+Use this panel to select an instrument setup that best suits your observing needs. For more details of
+the different settings, and a guide to using each instrument, see:
+
+- :doc:`Using HiPERCAM <hipercam>`
+- :doc:`Using ULTRACAM <ultracam>`
+- :doc:`Using ULTRASPEC <ultraspec>`
 
 Once you've got a setup and a pointing you are happy with, you can save a finding chart
 and export an instrument configuration file. To do this, select
-:menuselection:`Save --> Finding Chart` and :menuselection:`Save --> Inst. Setup File`
+:menuselection:`Save --> Finding Chart`. For HiPERCAM, you should also save a
+JSON copy of your instrument setup by selecting :menuselection:`Save --> Inst. Setup File`
 respectively. This will create two files which you should upload as part of your
 phase II submission.
 

@@ -18,14 +18,17 @@ hcam-finder
      :alt: Updates
 
 
-Observation planning and finding charts for HiPERCAM
+Observation planning and finding charts for HiPERCAM, ULTRACAM and ULTRASPEC
 
-**IMPORTANT: as of v0.5 hcam_finder has the correct rotator centre and
+**IMPORTANT: as of v0.5 hcam_finder has updated the rotator centre and
 offset for the GTC. If you installed prior to this, make sure you delete the
 config file `~/.hfinder/config` and update to the latest version.**
 
-``hcam_finder`` provides a Python script ``hfinder`` for observation planning with
-HiPERCAM on the WHT and GTC. It allows you to generate finding charts as well as specify the instrument setup
+``hcam_finder`` provides a Python scripts ``hfinder``, ``ufinder`` and ``usfinder``
+for observation planning with HiPERCAM on the WHT and GTC, ULTRACAM on the NTT and
+ULTRASPEC on the TNT.
+
+These tools allow you to generate finding charts as well as specify the instrument setup
 you require, whilst providing an estimate of observing cadence, exposure time and
 S/N estimates.
 
