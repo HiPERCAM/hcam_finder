@@ -6,6 +6,7 @@
 from __future__ import print_function, absolute_import, unicode_literals, division
 
 import logging
+from functools import partial
 import six
 from distutils.version import LooseVersion
 
@@ -23,7 +24,8 @@ from hcam_widgets.compo import widgets as compo_widgets
 
 from hcam_finder.config import (load_config, write_config,
                                 check_user_dir)
-from hcam_finder import FovSetter
+from hcam_finder import HCAMFovSetter
+from hcam_finder.finders import TelChooser
 
 if not six.PY3:
     import Tkinter as tk
@@ -96,7 +98,7 @@ class FitsViewer(tk.Tk):
         # initialised first.
         self.globals.clog = w.LabelGuiLogger('CMM', self, 5, 56, 'Command log')
         self.globals.rlog = w.LabelGuiLogger('RSP', self, 5, 56, 'Response log')
-        # we don't want these warnings - a lot are irrelavent when not running the instrument
+        # we don't want these warnings - a lot are irrelavent when not running the instrument
         for handler in self.globals.clog._log.handlers:
             handler.setLevel(logging.ERROR)
         for handler in self.globals.rlog._log.handlers:
@@ -162,7 +164,20 @@ class FitsViewer(tk.Tk):
         self.helpbox = tk.Label(self, text=tips, anchor=tk.W, justify=tk.LEFT)
 
         # target widget
-        self.target = FovSetter(self, self.fitsimage, logger)
+        self.target = HCAMFovSetter(self, self.fitsimage, logger)
+
+        # MenuBars
+        menubar = tk.Menu(self)
+        fileMenu = tk.Menu(menubar, tearoff=0)
+        fileMenu.add_command(label='Finding Chart', command=self.target.publish)
+        fileMenu.add_command(label='JSON config', command=self.target.saveconf)
+        # telescope chooser
+        telChooser_cmd = partial(self.target.set_telins, g=self.globals)
+        telChooser = TelChooser(menubar, telChooser_cmd)
+
+        menubar.add_cascade(label='Telescope', menu=telChooser)
+        menubar.add_cascade(label='Save', menu=fileMenu)
+        self.config(menu=menubar)
 
         # enable 'n' key as binding for next dither position
         def n_press(event):
