@@ -4,9 +4,8 @@
 # Please see the file LICENSE.txt for details.
 #
 from __future__ import print_function, absolute_import, unicode_literals, division
-
-import logging
 from functools import partial
+import logging
 import six
 from distutils.version import LooseVersion
 
@@ -19,12 +18,11 @@ from ginga.canvas.types.astro import Compass
 import hcam_widgets.tkutils as tkutils
 from hcam_widgets.globals import Container
 import hcam_widgets.widgets as w
-from hcam_widgets import hcam
-from hcam_widgets.compo import widgets as compo_widgets
+from hcam_widgets.uspec import InstPars, CountsFrame
 
 from hcam_finder.config import (load_config, write_config,
                                 check_user_dir)
-from hcam_finder import HCAMFovSetter
+from hcam_finder.uspec_finder import USPECFovSetter
 from hcam_finder.finders import TelChooser
 
 if not six.PY3:
@@ -76,12 +74,16 @@ class FitsViewer(tk.Tk):
         self.logger = logger
 
         # add a container object
-        self.globals = Container(telescope_names=['WHT', 'GTC'])
+        self.globals = Container(telescope_names=['TNT'])
         self.globals.cpars = dict()
         load_config(self.globals)
+        # TODO: cruft from hdriver, remove
         self.globals.cpars['file_logging_on'] = 0
         self.globals.cpars['hcam_server_on'] = 0
         self.globals.cpars['eso_server_online'] = False
+
+        # FIX THIS - should remember telescope name
+        self.globals.cpars['telins_name'] = 'TNT'
 
         # make sure we've got a user dir to read/store configs from
         check_user_dir(self.globals)
@@ -90,33 +92,23 @@ class FitsViewer(tk.Tk):
         tkutils.addStyle(self)
         self.tk_focusFollowsMouse()
 
-        # Now we make the HiPERCAM widgets
+        # Now we make the UltraSpec widgets
         # including some widgets that will not be displayed,
-        # because the hipercam widgets want to talk to them.
+        # because the other widgets want to talk to them.
         # The order here is determined by the fact that some widgets
         # need to reference the simpler ones, so they have to
         # initialised first.
         self.globals.clog = w.LabelGuiLogger('CMM', self, 5, 56, 'Command log')
-        self.globals.rlog = w.LabelGuiLogger('RSP', self, 5, 56, 'Response log')
         # we don't want these warnings - a lot are irrelavent when not running the instrument
         for handler in self.globals.clog._log.handlers:
-            handler.setLevel(logging.ERROR)
-        for handler in self.globals.rlog._log.handlers:
             handler.setLevel(logging.ERROR)
 
         # This one is actually displayed!
         # Instrument params
-        self.globals.ipars = hcam.InstPars(self)
-
-        self.globals.rpars = hcam.RunPars(self)
-        self.globals.info = w.InfoFrame(self)
-        self.globals.observe = hcam.Observe(self)
+        self.globals.ipars = InstPars(self)
 
         # counts and S/N frame. Also displayed!
-        self.globals.count = hcam.CountsFrame(self)
-
-        # COMPO HW control widget. Not shown initially, but raised when COMPO used
-        self.globals.compo_hw = compo_widgets.COMPOSetupWidget(self)
+        self.globals.count = CountsFrame(self)
 
         # container canvas
         viewerFrame = tk.Canvas(self, bg="grey", height=600, width=600)
@@ -164,13 +156,12 @@ class FitsViewer(tk.Tk):
         self.helpbox = tk.Label(self, text=tips, anchor=tk.W, justify=tk.LEFT)
 
         # target widget
-        self.target = HCAMFovSetter(self, self.fitsimage, logger)
+        self.target = USPECFovSetter(self, self.fitsimage, logger)
 
         # MenuBars
         menubar = tk.Menu(self)
         fileMenu = tk.Menu(menubar, tearoff=0)
         fileMenu.add_command(label='Finding Chart', command=self.target.publish)
-        fileMenu.add_command(label='JSON config', command=self.target.saveconf)
         # telescope chooser
         telChooser_cmd = partial(self.target.set_telins, g=self.globals)
         telChooser = TelChooser(menubar, telChooser_cmd)
@@ -179,31 +170,20 @@ class FitsViewer(tk.Tk):
         menubar.add_cascade(label='Save', menu=fileMenu)
         self.config(menu=menubar)
 
-        # enable 'n' key as binding for next dither position
-        def n_press(event):
-            self.target._step_ccd()
-        self.bind('<n>', n_press)
-
         # add additional callback to instpars widgets to redraw CCD on change
         widgets_to_fix = [self.globals.ipars.app,
-                          self.globals.ipars.drift_frame.npair,
-                          self.globals.ipars.quad_frame.nquad]
-        widgets_to_fix.extend((xsl for xsl in self.globals.ipars.drift_frame.xsl))
-        widgets_to_fix.extend((xsr for xsr in self.globals.ipars.drift_frame.xsr))
-        widgets_to_fix.extend((ys for ys in self.globals.ipars.drift_frame.ys))
-        widgets_to_fix.extend((nx for nx in self.globals.ipars.drift_frame.nx))
-        widgets_to_fix.extend((ny for ny in self.globals.ipars.drift_frame.ny))
+                          self.globals.ipars.pframe.npair,
+                          self.globals.ipars.wframe.nwin]
+        widgets_to_fix.extend((xsl for xsl in self.globals.ipars.pframe.xsl))
+        widgets_to_fix.extend((xsr for xsr in self.globals.ipars.pframe.xsr))
+        widgets_to_fix.extend((ys for ys in self.globals.ipars.pframe.ys))
+        widgets_to_fix.extend((nx for nx in self.globals.ipars.pframe.nx))
+        widgets_to_fix.extend((ny for ny in self.globals.ipars.pframe.ny))
 
-        widgets_to_fix.extend((xsll for xsll in self.globals.ipars.quad_frame.xsll))
-        widgets_to_fix.extend((xslr for xslr in self.globals.ipars.quad_frame.xslr))
-        widgets_to_fix.extend((xsul for xsul in self.globals.ipars.quad_frame.xsul))
-        widgets_to_fix.extend((xsur for xsur in self.globals.ipars.quad_frame.xsur))
-        widgets_to_fix.extend((ys for ys in self.globals.ipars.quad_frame.ys))
-        widgets_to_fix.extend((nx for nx in self.globals.ipars.quad_frame.nx))
-        widgets_to_fix.extend((ny for ny in self.globals.ipars.quad_frame.ny))
-        widgets_to_fix.extend([self.globals.compo_hw.setup_frame.pickoff_angle,
-                               self.globals.ipars.compo,
-                               self.globals.compo_hw.setup_frame.injection_side])
+        widgets_to_fix.extend((xs for xs in self.globals.ipars.wframe.xs))
+        widgets_to_fix.extend((ys for ys in self.globals.ipars.wframe.ys))
+        widgets_to_fix.extend((nx for nx in self.globals.ipars.wframe.nx))
+        widgets_to_fix.extend((ny for ny in self.globals.ipars.wframe.ny))
 
         def new_check(*args):
             try:
@@ -216,21 +196,19 @@ class FitsViewer(tk.Tk):
             widget.checker = new_check
         # radio buttons
         widgets_to_fix[0].val.trace('w', new_check)
-        widgets_to_fix[-1].val.trace('w', new_check)
-        widgets_to_fix[-2].val.trace('w', new_check)
+        # widgets_to_fix[-1].val.trace('w', new_check)
+        # widgets_to_fix[-2].val.trace('w', new_check)
 
         # now layout
         self.target.grid(row=0, column=0, sticky=tk.W+tk.N, padx=10, pady=3)
         self.globals.count.grid(row=1, column=0, sticky=tk.W+tk.N, padx=10, pady=3)
-        self.globals.ipars.grid(row=2, column=0, sticky=tk.W+tk.N, padx=10, pady=3,
-                                rowspan=3)
-        viewerFrame.grid(row=0, column=1, sticky=tk.W+tk.N, padx=10, pady=3,
-                         rowspan=3)
+        self.globals.ipars.grid(row=2, column=0, sticky=tk.W+tk.N, padx=10, pady=3)
+        viewerFrame.grid(row=0, column=1, sticky=tk.W+tk.N, padx=10, pady=3, rowspan=3)
         self.readout.grid(row=3, column=1, sticky=tk.W+tk.N, padx=10, pady=3)
         self.helpbox.grid(row=4, column=1, sticky=tk.W+tk.N, padx=10, pady=3)
 
         # configure
-        self.title('hfinder')
+        self.title('usfinder')
         self.protocol("WM_DELETE_WINDOW", self.quit)
 
         # run checks
