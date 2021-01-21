@@ -3,9 +3,10 @@ from __future__ import print_function, absolute_import, unicode_literals, divisi
 import six
 from os.path import expanduser
 import json
+import itertools
 
 from ginga.util import wcs
-from ginga.canvas.types.all import (Path, CompoundObject)
+from ginga.canvas.types.all import (Line, CompoundObject)
 from astropy import units as u
 from astropy.coordinates import SkyCoord
 
@@ -145,11 +146,14 @@ class HCAMFovSetter(FovSetter):
         points = [image.radectopix(ra, dec) for (ra, dec) in (
             (chip_ctr_ra, ybot), (chip_ctr_ra, ytop)
         )]
-        hline = Path(points, color='red', linestyle='dash', linewidth=2)
+        points = list(itertools.chain.from_iterable(points))
+        hline = Line(*points, color='red', linestyle='dash', linewidth=2)
+
         points = [image.radectopix(ra, dec) for (ra, dec) in (
             (xleft, chip_ctr_dec), (xright, chip_ctr_dec)
         )]
-        vline = Path(points, color='red', linestyle='dash', linewidth=2)
+        points = list(itertools.chain.from_iterable(points))
+        vline = Line(*points, color='red', linestyle='dash', linewidth=2)
 
         # list of objects for compound object
         obl = [mainCCD, hline, vline]

@@ -187,6 +187,8 @@ class FitsViewer(tk.Tk):
 
         for widget in widgets_to_fix:
             widget.checker = new_check
+        # radio buttons
+        self.globals.ipars.app.val.trace('w', new_check)
 
         # now layout
         self.target.grid(row=0, column=0, sticky=tk.W+tk.N, padx=10, pady=3)
