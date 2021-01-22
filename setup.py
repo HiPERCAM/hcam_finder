@@ -16,7 +16,7 @@ requirements = [
     'astropy',
     'pillow',
     'configobj',
-    'hcam_widgets>=0.8'
+    'hcam_widgets>=0.8.1'
 ]
 
 test_requirements = [
