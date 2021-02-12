@@ -18,6 +18,8 @@ from hcam_widgets.tkutils import get_root
 from .finding_chart import make_finder
 from .shapes import CCDWin
 
+from .panstarrs import PS1ImageServer
+from .ztf import ZTFImageServer
 has_astroquery = True
 try:
     from .skyview import SkyviewImageServer
@@ -49,6 +51,16 @@ if has_astroquery:
         ('2MASS', '2MASS J', SkyviewImageServer, "2MASS-J", "Skyview 2MASS J")
     ])
 
+image_archives.extend([
+    ('ZTF', 'ZTF g', ZTFImageServer, 'zg', 'ZTF g'),
+    ('ZTF', 'ZTF r', ZTFImageServer, 'zr', 'ZTF r'),
+    ('ZTF', 'ZTF i', ZTFImageServer, 'zi', 'ZTF i'),
+    ('PS1', 'PS1 g', PS1ImageServer, 'g', 'Panstarrs g'),
+    ('PS1', 'PS1 r', PS1ImageServer, 'r', 'Panstarrs r'),
+    ('PS1', 'PS1 i', PS1ImageServer, 'i', 'Panstarrs i'),
+    ('PS1', 'PS1 z', PS1ImageServer, 'z', 'Panstarrs z'),
+    ('PS1', 'PS1 y', PS1ImageServer, 'y', 'Panstarrs y')
+])
 
 @u.quantity_input(px_val=u.pix)
 @u.quantity_input(px_scale=u.arcsec/u.pix)
@@ -532,8 +544,6 @@ class FovSetter(tk.LabelFrame):
             # width and height are specified in arcmin
             wd = 60*fov_deg
             ht = 60*fov_deg
-
-            # these are the params to DSS
             params = dict(ra=ra_txt, dec=dec_txt, width=wd, height=ht)
 
             # query server and download file
@@ -541,7 +551,7 @@ class FovSetter(tk.LabelFrame):
             filepath = os.path.join(self.tmpdir, filename)
             if os.path.exists(filepath):
                 os.unlink(filepath)
-            print(self.servername, self.bank.getServerNames())
+
             dstpath = self.bank.getImage(self.servername, filepath, **params)
         except Exception as err:
             errmsg = "Failed to download sky image: {}".format(str(err))
