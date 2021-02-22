@@ -2,11 +2,8 @@
 from __future__ import print_function, absolute_import, unicode_literals, division
 import six
 
-from astroquery.skyview import SkyView
 from ginga.misc import Bunch
 from ginga.util import wcs
-from astropy import coordinates as coord
-from astropy import units as u
 import numpy as np
 from astropy.table import Table
 
