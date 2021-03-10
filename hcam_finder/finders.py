@@ -4,6 +4,7 @@ import tempfile
 import threading
 import os
 import six
+import re
 
 import numpy as np
 from ginga.util import catalog, dp, wcs
@@ -235,15 +236,34 @@ class FovSetter(tk.LabelFrame):
         # canvas that we will draw on
         self.canvas = fitsimage.canvas
 
+    def have_decimal_coords(self):
+        r = re.compile(r"^[-+]?\d*[.,]?\d*$")
+        coord_string = self.targCoords.value()
+        ret_val = False
+        if len(coord_string.split()) == 2:
+            decimals = [
+                r.match(thing) is not None
+                for thing in coord_string.split()
+            ]
+            if all(decimals):
+                ret_val = True
+        return ret_val
+
     def targetMarker(self):
         g = get_root(self).globals
-        coo = SkyCoord(self.targCoords.value(),
-                       unit=(u.hour, u.deg))
+        if self.have_decimal_coords():
+            coo = SkyCoord(self.targCoords.value(),
+                           unit=u.deg)
+        else:
+            coo = SkyCoord(self.targCoords.value(),
+                           unit=(u.hour, u.deg))
         image = self.fitsimage.get_image()
+
+        # 3 arcsecond radius target marker
         x, y = image.radectopix(coo.ra.deg, coo.dec.deg)
-        size = 10 if g.cpars['telins_name'] == 'WHT' else 3
-        circ = Circle(x, y, size, fill=True,
-                      color='red', fillalpha=0.3)
+        size = wcs.calc_radius_xy(image, x, y, 3/3600)
+        circ = Circle(x, y, size, fill=True, linewidth=3,
+                      color='blue', fillalpha=0.3)
         self.canvas.deleteObjectByTag('Target')
         self.canvas.add(circ, tag='Target', redraw=True)
 
@@ -492,8 +512,12 @@ class FovSetter(tk.LabelFrame):
         self.fitsimage.set_image(image)
 
     def set_and_load(self):
-        coo = SkyCoord(self.targCoords.value(),
-                       unit=(u.hour, u.deg))
+        if self.have_decimal_coords():
+            coo = SkyCoord(self.targCoords.value(),
+                           unit=u.deg)
+        else:
+            coo = SkyCoord(self.targCoords.value(),
+                           unit=(u.hour, u.deg))
         self.ra.set(coo.ra.deg)
         self.dec.set(coo.dec.deg)
         self.load_image()
