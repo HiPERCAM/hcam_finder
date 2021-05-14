@@ -14,6 +14,7 @@ from ginga import AstroImage
 from ginga import imap
 from ginga.tkw.ImageViewTk import ImageViewCanvas
 from ginga.canvas.types.astro import Compass
+from twisted.internet.defer import inlineCallbacks, returnValue
 
 import hcam_widgets.tkutils as tkutils
 from hcam_widgets.globals import Container
@@ -178,12 +179,20 @@ class FitsViewer(tk.Tk):
         widgets_to_fix.extend((nx for nx in self.globals.ipars.wframe.nx))
         widgets_to_fix.extend((ny for ny in self.globals.ipars.wframe.ny))
 
+        @inlineCallbacks
         def new_check(*args):
             try:
                 self.target.draw_ccd(*args)
             except Exception:
                 pass
-            return self.globals.ipars.check(*args)
+            result = yield self.globals.ipars.check(*args)
+            if not result:
+                # disable saving JSON
+                self.menubar.entryconfig("Save", state="disabled")
+            else:
+                # enable saving JSON
+                self.menubar.entryconfig("Save", state="normal")
+            returnValue(result)
 
         for widget in widgets_to_fix:
             widget.checker = new_check
