@@ -15,6 +15,7 @@ from ginga import AstroImage
 from ginga import imap
 from ginga.tkw.ImageViewTk import ImageViewCanvas
 from ginga.canvas.types.astro import Compass
+from twisted.internet.defer import inlineCallbacks, returnValue
 
 import hcam_widgets.tkutils as tkutils
 from hcam_widgets.globals import Container
@@ -167,17 +168,17 @@ class FitsViewer(tk.Tk):
         self.target = HCAMFovSetter(self, self.fitsimage, logger)
 
         # MenuBars
-        menubar = tk.Menu(self)
-        fileMenu = tk.Menu(menubar, tearoff=0)
+        self.menubar = tk.Menu(self)
+        fileMenu = tk.Menu(self.menubar, tearoff=0)
         fileMenu.add_command(label='Finding Chart', command=self.target.publish)
         fileMenu.add_command(label='JSON config', command=self.target.saveconf)
         # telescope chooser
         telChooser_cmd = partial(self.target.set_telins, g=self.globals)
-        telChooser = TelChooser(menubar, telChooser_cmd)
+        telChooser = TelChooser(self.menubar, telChooser_cmd)
 
-        menubar.add_cascade(label='Telescope', menu=telChooser)
-        menubar.add_cascade(label='Save', menu=fileMenu)
-        self.config(menu=menubar)
+        self.menubar.add_cascade(label='Telescope', menu=telChooser)
+        self.menubar.add_cascade(label='Save', menu=fileMenu)
+        self.config(menu=self.menubar)
 
         # enable 'n' key as binding for next dither position
         def n_press(event):
@@ -205,12 +206,20 @@ class FitsViewer(tk.Tk):
                                self.globals.ipars.compo,
                                self.globals.compo_hw.setup_frame.injection_side])
 
+        @inlineCallbacks
         def new_check(*args):
             try:
                 self.target.draw_ccd(*args)
             except Exception:
                 pass
-            return self.globals.ipars.check(*args)
+            result = yield self.globals.ipars.check(*args)
+            if not result:
+                # disable saving JSON
+                self.menubar.entryconfig("Save", state="disabled")
+            else:
+                # enable saving JSON
+                self.menubar.entryconfig("Save", state="normal")
+            returnValue(result)
 
         for widget in widgets_to_fix:
             widget.checker = new_check
