@@ -80,6 +80,10 @@ JSON copy of your instrument setup by selecting :menuselection:`Save --> Inst. S
 respectively. This will create two files which you should upload as part of your
 phase II submission.
 
+.. Warning::
+    The JSON files produced by `hfinder` should not be edited by hand. Many of the mistakes
+    observed in phase II submissions arise from hand-edited JSON files.
+
 .. _config-file:
 
 Changing the config file

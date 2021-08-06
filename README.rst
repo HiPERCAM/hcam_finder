@@ -20,17 +20,22 @@ hcam-finder
 
 Observation planning and finding charts for HiPERCAM, ULTRACAM and ULTRASPEC
 
-**IMPORTANT: as of v0.5 hcam_finder has updated the rotator centre and
-offset for the GTC. If you installed prior to this, make sure you delete the
-config file `~/.hfinder/config` and update to the latest version.**
-
-``hcam_finder`` provides a Python scripts ``hfinder``, ``ufinder`` and ``usfinder``
+The ``hcam_finder`` package provides Python scripts ``hfinder``, ``ufinder`` and ``usfinder``
 for observation planning with HiPERCAM on the WHT and GTC, ULTRACAM on the NTT and
-ULTRASPEC on the TNT.
+ULTRASPEC on the TNT, respectively.
 
 These tools allow you to generate finding charts as well as specify the instrument setup
 you require, whilst providing an estimate of observing cadence, exposure time and
 S/N estimates.
+
+.. Note::
+
+        Creating a finding chart and instrument setup for the above instruments are more
+        tightly connected than is usually the case with CCD imagers. To avoid errors in
+        phase II setups, you **must** use the tools above to generate finding charts. By 
+        doing so, and reading the instrument-specific documentation below, you will avoid
+        the non-optimal phase II setups that arise from a lack of awareness of the peculiarities
+        of imagers designed for high time resolution.
 
 ``hcam_finder`` is written in Python and is based on TKinter. It should be compatible
 with Python2 and Python3.
