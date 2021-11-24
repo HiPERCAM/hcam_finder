@@ -170,6 +170,7 @@ class FitsViewer(tk.Tk):
         menubar.add_cascade(label='Telescope', menu=telChooser)
         menubar.add_cascade(label='Save', menu=fileMenu)
         self.config(menu=menubar)
+        self.menubar = menubar
 
         # add additional callback to instpars widgets to redraw CCD on change
         widgets_to_fix = [self.globals.ipars.wframe.npair]
