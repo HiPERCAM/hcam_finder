@@ -65,6 +65,9 @@ class HCAMFovSetter(FovSetter):
         data = dict()
         data["appdata"] = g.ipars.dumpJSON()
 
+        # add compo setup info
+        data["compo"] = g.compo_hw.dumpJSON()
+
         # add user info that we should know of
         # includes target, user and proposal
         user = dict()
