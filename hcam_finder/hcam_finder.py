@@ -135,6 +135,10 @@ class HCAMFovSetter(FovSetter):
 
         obj = self.canvas.get_object_by_tag("ccd_overlay")
         obj.move_delta(xn - xc, yn - yc)
+
+        obj = self.canvas.get_object_by_tag("compo_overlay")
+        obj.move_delta(xn - xc, yn - yc)
+        
         self.canvas.update_canvas()
 
     def _make_ccd(self, image):
