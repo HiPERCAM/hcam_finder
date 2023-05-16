@@ -7,8 +7,9 @@ HiPERCAM
 Because HiPERCAM is optimised for high time resolution, there are a number of peculiarities
 to it's use. You should read this document in full before creating a phase II submission.
 
-If you are already familiar with |hiper|, there is a handy :ref:`checklist` you can use
-to check your setups before submission.
+** |hiper| is a deceptively complex instrument to use. ** Even if you are already familiar
+with |hiper|, we strongly recommend using the  :ref:`checklist` to check your setups before
+submission.
 
 The primary consideration when observing with HiPERCAM is to realise that its frame-transfer
 CCDs have no shutter. Instead, an image is rapidly moved into the storage area, which begins
@@ -277,6 +278,55 @@ there is a backup comparison for those bands.
    read out at the 4 corners and you risk your target being divided across
    multiple :ref:`outputs`.
 
+.. _compo_h:
+
+Using COMPO for better comparison stars
+---------------------------------------
+
+Sometimes there are no good comparison stars in the field of view. To
+address this issue, HiPERCAM is equipped with a COMparison PickOff (COMPO).
+
+COMPO works by using a small pick-off mirror on a rotating arm to capture
+light from a star outside the field of view. The light is then fed into 
+an injection arm which can place the light from the star into one corner
+of the CCD. The pickoff and injection arms have a field of view of 24 arcsec.
+
+The injection arm will vignette the corner of the CCD in which is is placed.
+
+Use of COMPO is enabled using the :guilabel:`COMPO` checkbox. This brings up a 
+small COMPO widget that allows one to set the position of the injection arm and 
+the rotation angle of the pickoff arm. The current COMPO setup is also displayed,
+as shown below.
+
+.. image:: images/compo.png
+    :alt: compo display
+    :align: center
+
+The pickoff and injection arms are shown in yellow. The rectangular region shows the vignetted
+area, and the circle shows the field of view of the arms. The black line shows the path the 
+pickoff arm will take as it rotates. The green shaded region shows the area of sky that is
+accessible. 
+
+By :ref:`changing the telescope PA <manip_fov_h>` and pickoff arm angle, you can place your 
+desired comparison star within the field of view of the pickoff arm. The position of the 
+injection arm is selected using the radio buttons. The options available are:
+
+.. list-table:: Injection arm options
+   :widths: 10 90
+   :header-rows: 0
+
+   * - :guilabel:`L`
+     - Position arm in lower left corner of CCD
+   * - :guilabel:`R`
+     - Position arm in lower right corner of CCD
+   * - :guilabel:`G`
+     - Position injection arm over the guide camera.
+   * - :guilabel:`P`
+     - Park injection arm out of the FoV (also parks pickoff arm).
+
+By positioning the pickoff arm over a bright star and selecting :guilabel:`G` for the injection
+arm, compo can be used as an :ref:`off-axis autoguider <guiding_h>` for long exposures.
+
 Miscellaneous settings
 ======================
 
@@ -304,6 +354,42 @@ Overscan
     highest levels of photometric precision, so consider this option for, e.g. exoplanet transit
     observations.
 
+.. _guiding_h:
+
+Autoguiding
+===========
+HiPERCAM is mounted on the FC-G rotator. This instrument port has no built-in autoguider. Autoguiding 
+is therefore provided by the science instrument itself. There are two options for autoguiding: guiding
+using the science images themselves, or using :ref:`COMPO <compo_h>` as an off-axis guider.
+
+Autoguiding using the science images
+------------------------------------
+For relative short exposure times (less than around 60 seconds), the tracking of the telescope is
+adequate to provide sharp images. The best option for guiding is therefore to use the position
+of bright targets in the science images to correct for any drift in the telescope pointing. 
+This requires no setup using ``hfinder``, and is performed by the support astronomer on the night.
+
+Autoguiding using COMPO
+-----------------------
+For longer exposure times, the tracking of the telescope is not adequate to provide sharp images.
+Active autoguiding during a single exposure is required. For this purpose, :ref:`COMPO <compo_h>`
+can be used as an off-axis guider. This is enabled by selecting :guilabel:`G` for the injection
+arm and positioning the injection arm over your chosen guide star.
+
+.. Note::
+
+   Guide stars in the magnitude range (XX-XX) are most suitable for guiding. 
+
+.. Warning::
+
+   Many extra-galactic observations use a combination of long exposures, and :ref:`dithering <nod>`
+   to allow accurate background removal. This is possible with COMPO autoguiding, but requires that
+   the offsets between dither positions is small. The FoV of the pickoff mirror is 24 arcseconds,
+   so no offset position should be further than 10 arcseconds from the central position. 
+
+   In principle it would be possible to supply a telescope PA and pickoff angle position for each
+   dither position, to ensure the guide star is always visible. However, this mode is not currently
+   supported (as of Summer 2023).
 
 .. _nod:
 
@@ -431,6 +517,10 @@ Checklist
 
 #. For variable targets, have you considered the impact of the full range
    of their variability in terms of possible saturation or readnoise?
+
+#. If your exposure times are long (more than approx 60 seconds), have you 
+   enabled the use of COMPO, and positioned the pick-off mirror over a suitable
+   guide star?
 
 #. Is the duty cycle of your setup what you expect? For most observations
    it should be above 95%.
