@@ -51,7 +51,7 @@ class CompoPatrolArc(Path):
         image : `~ginga.AstroImage`
               image to plot Window on
         """
-        # assume patrol arc of 90 degrees
+        
         theta = np.linspace(-65, 65, 40)*u.deg
 
         # circular arc, swapping dec sign
@@ -71,24 +71,3 @@ class CompoPatrolArc(Path):
         super(CompoPatrolArc, self).__init__(self.points, **params)
         self.name = params.pop('name', 'patrol_arc')
 
-
-class CompoFreeRegion(Polygon):
-    def __init__(self, ra_ctr_deg, dec_ctr_deg, image, **params):
-        """
-        Shape for drawing unvignetted area available to patrol arm
-
-        Parameters
-        ----------
-        ra_ctr_deg, dec_ctr_deg : float
-              Tel pointing center (deg)
-        image : `~ginga.AstroImage`
-              image to plot Window on
-        """
-        guider_file = pkg_resources.resource_filename('hcam_finder',
-                                                      'data/guider_hole_arcseconds.txt')
-        points = np.loadtxt(guider_file) / 36000
-        points_wcs = [wcs.add_offset_radec(ra_ctr_deg, dec_ctr_deg, p[0], p[1]) for p in points]
-        self.points = [image.radectopix(ra, dec) for (ra, dec) in points_wcs]
-        self.bezier = get_bezier(30, self.points)
-        super(CompoFreeRegion, self).__init__(self.bezier, **params)
-        self.name = params.pop('name', 'compo_free_region')

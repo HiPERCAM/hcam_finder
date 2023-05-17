@@ -19,7 +19,7 @@ from hcam_widgets.compo.utils import (
 from hcam_widgets.tkutils import get_root
 
 from .finders import FovSetter
-from .shapes import CompoPatrolArc, CompoFreeRegion
+from .shapes import CompoPatrolArc
 
 if not six.PY3:
     import tkFileDialog as filedialog
@@ -242,15 +242,6 @@ class HCAMFovSetter(FovSetter):
             linestyle="dash",
             name="COMPO_Arc",
         )
-        compo_free = CompoFreeRegion(
-            chip_ctr_ra,
-            chip_ctr_dec,
-            image,
-            fill=True,
-            fillcolor="green",
-            fillalpha=0.1,
-            name="compo_free_region",
-        )
 
         compo_pickoff = PickoffArm().to_ginga_object(
             compo_angle * u.deg,
@@ -272,7 +263,7 @@ class HCAMFovSetter(FovSetter):
             name="COMPO_injector",
         )
 
-        obl = [compo_arc, compo_free, compo_pickoff, compo_injector]
+        obl = [compo_arc, compo_pickoff, compo_injector]
         obj = CompoundObject(*obl)
         obj.editable = True
         return obj

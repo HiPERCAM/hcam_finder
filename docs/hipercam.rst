@@ -304,8 +304,7 @@ as shown below.
 
 The pickoff and injection arms are shown in yellow. The rectangular region shows the vignetted
 area, and the circle shows the field of view of the arms. The black line shows the path the 
-pickoff arm will take as it rotates. The green shaded region shows the area of sky that is
-accessible. 
+pickoff arm will take as it rotates. 
 
 By :ref:`changing the telescope PA <manip_fov_h>` and pickoff arm angle, you can place your 
 desired comparison star within the field of view of the pickoff arm. The position of the 
