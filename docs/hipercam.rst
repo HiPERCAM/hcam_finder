@@ -51,11 +51,22 @@ you wouldn't be able to go faster without altering the setup.
 If your objects are not variable, then, as usual for CCD imaging, you
 should consider:
 
-#. the signal-to-noise you need, 
+#. the signal-to-noise you need (``hfinder`` will provide a summary and there
+   is an `online calculator <http://www.vikdhillon.staff.shef.ac.uk/hipercam/etc.html>`_ 
+   that gives full details), 
 #. the avoidance of saturation of your target and possibly comparison stars, 
 #. allowing enough time for the sky background to dominate over readout noise for faint sky-limited targets especially, and 
 #. whether you want to divide up exposures perhaps for dithering the position, or to enable 
    exploitation of brief periods of best sky conditions, e.g. seeing.
+
+.. note::
+
+   An exposure time of 30 seconds, binned 2x2, will be sky-noise sky-limited
+   (sky noise ~ 3x readout noise) in the u-band even in dark time. For 1x1
+   binning the same ratio is reached in 120 seconds. There is not much to be 
+   gained in using longer exposure times than this. We do not recommend using 
+   exposure times longer than 120 seconds when binned, or 240 seconds binned 
+   1x1.
 
 For time-series observations of variable targets, considerations
 1, 2 and 3 may still apply, but you also need to decide on the
