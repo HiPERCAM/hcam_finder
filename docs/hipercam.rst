@@ -7,7 +7,7 @@ HiPERCAM
 Because HiPERCAM is optimised for high time resolution, there are a number of peculiarities
 to it's use. You should read this document in full before creating a phase II submission.
 
-** |hiper| is a deceptively complex instrument to use. ** Even if you are already familiar
+**|hiper| is a deceptively complex instrument to use.** Even if you are already familiar
 with |hiper|, we strongly recommend using the  :ref:`checklist` to check your setups before
 submission.
 
