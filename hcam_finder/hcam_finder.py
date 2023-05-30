@@ -226,9 +226,9 @@ class HCAMFovSetter(FovSetter):
         chip_ctr_ra, chip_ctr_dec = self._chip_cen()
 
         if compo_side == "R":
-            ia = -INJECTOR_THETA
-        elif compo_side == "L":
             ia = INJECTOR_THETA
+        elif compo_side == "L":
+            ia = -INJECTOR_THETA
         else:
             ia = PARK_POSITION
 
