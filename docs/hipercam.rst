@@ -7,8 +7,9 @@ HiPERCAM
 Because HiPERCAM is optimised for high time resolution, there are a number of peculiarities
 to it's use. You should read this document in full before creating a phase II submission.
 
-If you are already familiar with |hiper|, there is a handy :ref:`checklist` you can use
-to check your setups before submission.
+**HiPERCAM is a deceptively complex instrument to use.** Even if you are already familiar
+with |hiper|, we strongly recommend using the  :ref:`checklist` to check your setups before
+submission.
 
 The primary consideration when observing with HiPERCAM is to realise that its frame-transfer
 CCDs have no shutter. Instead, an image is rapidly moved into the storage area, which begins
@@ -36,7 +37,7 @@ For observations where even shorter exposures are needed, there is a special mod
 (:ref:`clear_mode_h`), which can be used at the expense of dead time overheads. 
 Therefore, the exposure time can define multiple other aspects of the setup.
 
-For any given setup (binning, window sizes, readout mode), there is an
+For any given setup (binning, window sizes and positions, readout mode), there is an
 absolute minimum exposure time which is set by the time taken to
 readout the storage area. One can expose for longer than
 this minimum by adding an arbitrary "exposure delay"; this is a key
@@ -50,11 +51,22 @@ you wouldn't be able to go faster without altering the setup.
 If your objects are not variable, then, as usual for CCD imaging, you
 should consider:
 
-#. the signal-to-noise you need, 
+#. the signal-to-noise you need (``hfinder`` will provide a summary and there
+   is an `online calculator <http://www.vikdhillon.staff.shef.ac.uk/hipercam/etc.html>`_ 
+   that gives full details), 
 #. the avoidance of saturation of your target and possibly comparison stars, 
 #. allowing enough time for the sky background to dominate over readout noise for faint sky-limited targets especially, and 
 #. whether you want to divide up exposures perhaps for dithering the position, or to enable 
    exploitation of brief periods of best sky conditions, e.g. seeing.
+
+.. note::
+
+   An exposure time of 30 seconds, binned 2x2, will be sky-noise sky-limited
+   (sky noise ~ 3x readout noise) in the u-band even in dark time. For 1x1
+   binning the same ratio is reached in 120 seconds. There is not much to be 
+   gained in using longer exposure times than this. We do not recommend using 
+   exposure times longer than 120 seconds when binned, or 240 seconds binned 
+   1x1.
 
 For time-series observations of variable targets, considerations
 1, 2 and 3 may still apply, but you also need to decide on the
@@ -79,13 +91,14 @@ reasons for this:
 #. Binning substantially reduces the amount of data. This can allow
    you to readout the CCD faster. This could mean for example that you
    can read the entire CCD binned, whereas you would have to
-   sub-window if unbinned. This can make observing easier, and ensure
+   sub-window if unbinned. Reading the whole CCD means there are more
+   comparison stars available, makes observing easier, and ensures
    that objects are not too close to the edge of the readout
    windows.
 
 #. Binning reduces the impact of readout noise. CCD binning occurs on
    chip before readout, so readout noise is incurred per binned pixel,
-   not per native CCD pixel. This is often very important gain,
+   not per native CCD pixel. This can have a very large impact on your data,
    depending upon target and sky brightness. You should, if possible,
    define a setup that ensures that the peak target counts per binned
    pixel are substantially in excess of :math:`R^2 G` where :math:`R`
@@ -104,9 +117,9 @@ reasons for this:
 
 Binning has downsides of course; resolution is the obvious one. If you
 need to exploit good seeing, then you may not want to go beyond 2x2
-binning (0.162 arcseconds/pixel). The other one is that you make saturation. 
-However, points 2 and 3 above mean that more often than not
-you should bin, and you should think twice before simply selecting
+binning (0.162 arcseconds/pixel). The other effect is that you are more
+likely to saturate the CCD. However, points 2 and 3 above mean that more often
+than not you should bin, and you should think twice before simply selecting
 1x1. To understand more about how one guard against readout noise, see the
 section below on condition-tolerant setups.
 
@@ -129,7 +142,7 @@ Readout modes
 
 Outputs
 -------
-HiPERCAM has four seperate outputs, or channels, per CCD. The division between these
+HiPERCAM has four separate outputs, or channels, per CCD. The division between these
 outputs is clearly shown in the FoV in ``hfinder``. 
 
 .. Warning::
@@ -158,10 +171,7 @@ Synchronising windows
 `````````````````````
 
 If on-chip binning is enabled, it is possible to define windows that do not align with the
-boundaries of the binned pixels. This means that one cannot use
-calibration frames taken with 1x1 binning (such as sky flats) to match the windowed data.
-If windows are not synchronised in this manner, the :guilabel:`Sync` button will be enabled.
-Clicking this will align the windows with the boundaries of binned pixels.
+boundaries of the binned pixels. This means that one cannot crop binned, full-frame calibrations (such as bias frames) to apply to the windowed data. If windows are not synchronised in this manner, the :guilabel:`Sync` button will be enabled. Clicking this will align the windows with the boundaries of binned pixels.
 
 .. Warning::
 
@@ -173,18 +183,15 @@ Clicking this will align the windows with the boundaries of binned pixels.
 Clear mode
 ----------
 
-Sometimes extremely short exposures are needed, even with full frame data. Sky flats would be
-one example. It is possible to *clear* the image area of the CCD, just after the storage area
-is read out. This allows exposure times as short as 10 microseconds. These short exposures come
+Sometimes extremely short exposures are needed, even with full frame data. Bright standard stars would be one example. It is possible to *clear* the image area of the CCD, just after the storage area is read out. This allows exposure times as short as 10 microseconds. These short exposures come
 at the expense of efficiency, since the charge accumulated whilst the storage area was reading
 out is lost.
 
 For example, if the storage area takes 2s to read out, clear mode is enabled and the exposure delay
 is set to 1s, then an image would be take every 3s with a duty cycle of 30%.
 
-As a result, if the user needs short exposure times to avoid saturation, it is often
-preferable to use a faster readout speed, :ref:`windows_h` or :ref:`drift_mode_h` to achieve
-this without sacrificing observing efficiency.
+As a result, if the user needs short exposure times to avoid saturation, or if short exposures
+are needed for science purposes, then it is often preferable to use a faster readout speed, :ref:`windows_h` or :ref:`drift_mode_h` to achieve this without sacrificing observing efficiency.
 
 Clear mode is enabled by selecting the :guilabel:`Clear` checkbox.
 
@@ -194,9 +201,7 @@ Drift mode
 ----------
 
 Drift mode is used to enable the highest frame rates. Instead of shifting the entire image area
-into the storage area at the end of each exposure, only a small window at the bottom of the CCD
-is shifted into the storage area. This minimises the dead time involved in shifting charge to the
-storage area and allows frame rates of ~1 kHz for relatively small windows.
+into the storage area at the end of each exposure (a process that takes 7.8 milliseconds), only a small window at the bottom of the CCD is shifted into the storage area. This minimises the dead time involved in shifting charge to the storage area and allows frame rates of ~1 kHz for relatively small windows.
 
 In drift mode, a number of windows are present in the storage area at any one time. At the same
 time, any charge in pixels above the windows is eventually clocked into the windows, and becomes
@@ -204,6 +209,18 @@ part of that frame. To prevent bright stars from contaminating the drift mode da
 is inserted into the focal plane, blocking off most of the image area of the CCD. Because the
 windows in drift mode spend longer on the chip, they accumulate dark current; drift mode should
 only be used for frame rates faster than ~10 Hz as a result.
+
+In drift mode, only two windows are read out (at the bottom of the CCD). Clear mode is not possible in combination with drift mode. 
+
+Diff-Shift
+``````````
+
+After transfer to the storage area, both windows have to be clocked horizontally to reach the readout register. Therefore the fastest speeds are obtained when the windows are in the corners
+of the CCD. If the windows are moved in from corners, it  is best to move them inwards an equal 
+amount, since otherwise the window on the side closest to the readout register will have wait until the other window reaches the readout register, slowing down the frame rate.
+
+Details 
+```````
 
 For more information about drift mode, see the
 `ULTRACAM instrument paper <https://ui.adsabs.harvard.edu/#abs/2007MNRAS.378..825D/abstract>`_
@@ -277,6 +294,54 @@ there is a backup comparison for those bands.
    read out at the 4 corners and you risk your target being divided across
    multiple :ref:`outputs`.
 
+.. _compo_h:
+
+Using COMPO for better comparison stars
+---------------------------------------
+
+Sometimes there are no good comparison stars in the field of view. To
+address this issue, HiPERCAM is equipped with a COMparison PickOff (COMPO).
+
+COMPO works by using a small pick-off mirror on a rotating arm to capture
+light from a star outside the field of view. The light is then fed into 
+an injection arm which can optically place the light from the star into one corner
+of the CCD, effectively changing the on-sky position of the star. The pickoff and injection arms have a field of view of 24 arcsec.
+
+The injection arm will vignette the corner of the CCD in which is is placed.
+
+Use of COMPO is enabled using the :guilabel:`COMPO` checkbox. This brings up a 
+small COMPO widget that allows one to set the position of the injection arm and 
+the rotation angle of the pickoff arm. The current COMPO setup is also displayed,
+as shown below.
+
+.. image:: images/compo.png
+    :alt: compo display
+    :align: center
+
+The pickoff and injection arms are shown in yellow. The rectangular region shows the vignetted
+area, and the circle shows the field of view of the arms. The black line shows the path the 
+pickoff arm will take as it rotates. 
+
+By :ref:`changing the telescope PA <manip_fov_h>` and pickoff arm angle, you can place your 
+desired comparison star within the field of view of the pickoff arm. The position of the 
+injection arm is selected using the radio buttons. The options available are:
+
+.. list-table:: Injection arm options
+   :widths: 10 90
+   :header-rows: 0
+
+   * - :guilabel:`L`
+     - Position arm in lower left corner of CCD
+   * - :guilabel:`R`
+     - Position arm in lower right corner of CCD
+   * - :guilabel:`G`
+     - Position injection arm over the guide camera.
+   * - :guilabel:`P`
+     - Park injection arm out of the FoV (also parks pickoff arm).
+
+By positioning the pickoff arm over a bright star and selecting :guilabel:`G` for the injection
+arm, compo can be used as an :ref:`off-axis autoguider <guiding_h>` for long exposures.
+
 Miscellaneous settings
 ======================
 
@@ -295,15 +360,50 @@ Readout speed
 
 Fast clocks
     Users wanting the ultimate in high speed performance can enable this option. This increases the
-    rate at which charge is clocked in the CCDs. It will have an impact on charge transfer efficiency.
-    As of today, this impact has not been well characterised, but we do not think it is serious.
+    rate at which charge is clocked in the CCDs. It will have an impact on charge transfer efficiency. As of today, this impact has not been well characterised, but we do not think it is serious.
 
 Overscan
     Enable the recording of the overscan regions at the left and right edges of the chip. Can be
-    useful if precise measurement of the bias in each frame is needed. This is important for the
-    highest levels of photometric precision, so consider this option for, e.g. exoplanet transit
-    observations.
+    useful if precise measurement of the bias in each frame is needed. This can be useful for the
+    highest levels of photometric precision. If the bias level is wrong, the sky background (and
+    thus the estimated errors on the photomtry) will be wrong, so consider this option for, e.g. exoplanet transit observations.
 
+.. _guiding_h:
+
+Autoguiding
+===========
+HiPERCAM is mounted on the FC-G rotator. This instrument port has no built-in autoguider. Autoguiding 
+is therefore provided by the science instrument itself. There are two options for autoguiding: guiding
+using the science images themselves, or using :ref:`COMPO <compo_h>` as an off-axis guider.
+
+Autoguiding using the science images
+------------------------------------
+For relative short exposure times (less than around 60 seconds), the tracking of the telescope is
+adequate to provide sharp images. The best option for guiding is therefore to use the position
+of bright targets in the science images to correct for any drift in the telescope pointing. 
+This requires no setup using ``hfinder``, and is performed by the support astronomer on the night.
+
+Autoguiding using COMPO
+-----------------------
+For longer exposure times, the tracking of the telescope is not adequate to provide sharp images.
+Active autoguiding during a single exposure is required. For this purpose, :ref:`COMPO <compo_h>`
+can be used as an off-axis guider. This is enabled by selecting :guilabel:`G` for the injection
+arm and positioning the pickoff arm over your chosen guide star.
+
+.. Note::
+
+   Guide stars in the magnitude range (XX-XX) are most suitable for guiding. 
+
+.. Warning::
+
+   Many extra-galactic observations use a combination of long exposures, and :ref:`dithering <nod>`
+   to allow accurate background removal. This is possible with COMPO autoguiding, but requires that
+   the offsets between dither positions is small. The FoV of the pickoff mirror is 24 arcseconds,
+   so no offset position should be further than 10 arcseconds from the central position. 
+
+   In principle it would be possible to supply a telescope PA and pickoff angle position for each
+   dither position, to ensure the guide star is always visible when larger offsets than 10 arcsecs are required. However, this mode is not currently
+   supported (as of Summer 2023).
 
 .. _nod:
 
@@ -337,7 +437,7 @@ will cycle through the dithering pattern.
 Condition-tolerant setups
 =========================
 
-If you are sure that your target will only observed with seeing close
+If you are sure that your target will only be observed with seeing close
 to 1.2" and during clear conditions, you'll have a relatively easy job
 defining a setup. Much more difficult is if the seeing could be
 anything from 1.2 to 2.5", the reason being that the peak counts could
@@ -431,6 +531,10 @@ Checklist
 
 #. For variable targets, have you considered the impact of the full range
    of their variability in terms of possible saturation or readnoise?
+
+#. If your exposure times are long (more than approx 60 seconds), have you 
+   enabled the use of COMPO, and positioned the pick-off mirror over a suitable
+   guide star?
 
 #. Is the duty cycle of your setup what you expect? For most observations
    it should be above 95%.

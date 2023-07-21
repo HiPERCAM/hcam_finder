@@ -81,8 +81,8 @@ paOff = 1.7
 px_scale = 0.081
 nxtot = 2048
 nytot = 1024
-rotcen_x = 1020.0
-rotcen_y = 524.0
+rotcen_x = 1027.0
+rotcen_y = 520.0
 # is image flipped E-W?
 flipEW = True
 # does increasing PA rotate towards east from north?

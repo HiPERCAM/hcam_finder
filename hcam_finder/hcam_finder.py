@@ -19,7 +19,7 @@ from hcam_widgets.compo.utils import (
 from hcam_widgets.tkutils import get_root
 
 from .finders import FovSetter
-from .shapes import CompoPatrolArc, CompoFreeRegion
+from .shapes import CompoPatrolArc
 
 if not six.PY3:
     import tkFileDialog as filedialog
@@ -64,6 +64,9 @@ class HCAMFovSetter(FovSetter):
         g = get_root(self).globals
         data = dict()
         data["appdata"] = g.ipars.dumpJSON()
+
+        # add compo setup info
+        data["compo"] = g.compo_hw.dumpJSON()
 
         # add user info that we should know of
         # includes target, user and proposal
@@ -132,6 +135,10 @@ class HCAMFovSetter(FovSetter):
 
         obj = self.canvas.get_object_by_tag("ccd_overlay")
         obj.move_delta(xn - xc, yn - yc)
+
+        obj = self.canvas.get_object_by_tag("compo_overlay")
+        obj.move_delta(xn - xc, yn - yc)
+        
         self.canvas.update_canvas()
 
     def _make_ccd(self, image):
@@ -219,9 +226,9 @@ class HCAMFovSetter(FovSetter):
         chip_ctr_ra, chip_ctr_dec = self._chip_cen()
 
         if compo_side == "R":
-            ia = -INJECTOR_THETA
-        elif compo_side == "L":
             ia = INJECTOR_THETA
+        elif compo_side == "L":
+            ia = -INJECTOR_THETA
         else:
             ia = PARK_POSITION
 
@@ -234,15 +241,6 @@ class HCAMFovSetter(FovSetter):
             color="black",
             linestyle="dash",
             name="COMPO_Arc",
-        )
-        compo_free = CompoFreeRegion(
-            chip_ctr_ra,
-            chip_ctr_dec,
-            image,
-            fill=True,
-            fillcolor="green",
-            fillalpha=0.1,
-            name="compo_free_region",
         )
 
         compo_pickoff = PickoffArm().to_ginga_object(
@@ -265,7 +263,7 @@ class HCAMFovSetter(FovSetter):
             name="COMPO_injector",
         )
 
-        obl = [compo_arc, compo_free, compo_pickoff, compo_injector]
+        obl = [compo_arc, compo_pickoff, compo_injector]
         obj = CompoundObject(*obl)
         obj.editable = True
         return obj

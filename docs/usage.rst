@@ -33,6 +33,8 @@ Select a sky survey to grab images from and press the :guilabel:`Load Image` but
 image is available in the selected sky survey it will be downloaded and displayed, along with
 the HiPERCAM field of view (FoV).
 
+.. _manip_fov_h:
+
 Manipulating the FoV
 ---------------------
 
