@@ -1,4 +1,3 @@
-import pkg_resources
 import numpy as np
 from astropy import units as u
 
@@ -10,8 +9,7 @@ from hcam_widgets.compo.utils import field_stop_centre, gtc_focalplane_equivalen
 
 
 class CCDWin(Polygon):
-    def __init__(self, ra_ll_deg, dec_ll_deg, xs, ys,
-                 image, **params):
+    def __init__(self, ra_ll_deg, dec_ll_deg, xs, ys, image, **params):
         """
         Shape for drawing ccd window
 
@@ -32,11 +30,11 @@ class CCDWin(Polygon):
             (ra_ll_deg, dec_ll_deg),
             wcs.add_offset_radec(ra_ll_deg, dec_ll_deg, xs, 0.0),
             wcs.add_offset_radec(ra_ll_deg, dec_ll_deg, xs, ys),
-            wcs.add_offset_radec(ra_ll_deg, dec_ll_deg, 0.0, ys)
+            wcs.add_offset_radec(ra_ll_deg, dec_ll_deg, 0.0, ys),
         )
         self.points = [image.radectopix(ra, dec) for (ra, dec) in points_wcs]
         super(CCDWin, self).__init__(self.points, **params)
-        self.name = params.pop('name', 'window')
+        self.name = params.pop("name", "window")
 
 
 class CompoPatrolArc(Path):
@@ -51,8 +49,8 @@ class CompoPatrolArc(Path):
         image : `~ginga.AstroImage`
               image to plot Window on
         """
-        
-        theta = np.linspace(-65, 65, 40)*u.deg
+
+        theta = np.linspace(-65, 65, 40) * u.deg
 
         # circular arc, swapping dec sign
         X, Y = field_stop_centre(theta)
@@ -62,12 +60,10 @@ class CompoPatrolArc(Path):
             points = points.T.to_value(u.deg)
         # add offsets to pointing center
         points_wcs = [
-            wcs.add_offset_radec(ra_ctr_deg, dec_ctr_deg, p[0], p[1])
-            for p in points
+            wcs.add_offset_radec(ra_ctr_deg, dec_ctr_deg, p[0], p[1]) for p in points
         ]
 
         self.points = [image.radectopix(ra, dec) for (ra, dec) in points_wcs]
         self.bezier = get_bezier(30, self.points)
         super(CompoPatrolArc, self).__init__(self.points, **params)
-        self.name = params.pop('name', 'patrol_arc')
-
+        self.name = params.pop("name", "patrol_arc")

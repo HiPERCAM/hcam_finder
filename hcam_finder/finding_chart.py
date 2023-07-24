@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 from __future__ import print_function, absolute_import, unicode_literals, division
-import pkg_resources
+import importlib
 import six
 from os.path import expanduser
 
@@ -76,11 +76,11 @@ def make_finder_pillow(logger, fname, img_array, object_name, tel, ra, dec, pa, 
         )
     )
     font_size = 5
-    font_file = pkg_resources.resource_filename("hcam_finder", "data/Lato-Regular.ttf")
+    font_file = importlib.resources.files("hcam_finder") / "data/Lato-Regular.ttf"
     text_x = 0.0
     while text_x / width < 0.4:
         font_size += 1
-        font = ImageFont.truetype(font_file, font_size)
+        font = ImageFont.truetype(str(font_file), font_size)
         _, _, text_x, text_y = max((font.getbbox(txt) for txt in info_msg.splitlines()))
 
     nlines = len(info_msg.splitlines()) + 1

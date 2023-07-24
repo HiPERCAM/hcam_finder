@@ -1,29 +1,30 @@
 # read in config
 from __future__ import absolute_import, print_function, division
 import configobj
-import pkg_resources
+import importlib
 import os
 import validate
 
 
-def check_user_dir(g, app_name='hfinder'):
+def check_user_dir(g, app_name="hfinder"):
     """
     Check directories exist for saving apps/configs etc. Create if not.
     """
-    direc = os.path.expanduser('~/.' + app_name)
+    direc = os.path.expanduser("~/." + app_name)
     if not os.path.exists(direc):
         try:
             os.mkdir(direc)
         except Exception as err:
-            g.clog.warn('Failed to make directory ' + str(err))
+            g.clog.warn("Failed to make directory " + str(err))
 
 
-def load_config(g, app_name='hfinder', env_var='HCAM_FINDER_CONF'):
+def load_config(g, app_name="hfinder", env_var="HCAM_FINDER_CONF"):
     """
     Populate application level globals from config file
     """
-    configspec_file = pkg_resources.resource_filename('hcam_finder',
-                                                      'data/configspec.ini')
+    configspec_file = str(
+        importlib.resources.files("hcam_finder") / "data/configspec.ini"
+    )
     # try and load config file.
     # look in the following locations in order
     # - HCAM_FINDER_CONF environment variable
@@ -32,8 +33,8 @@ def load_config(g, app_name='hfinder', env_var='HCAM_FINDER_CONF'):
     paths = []
     if env_var in os.environ:
         paths.append(os.environ[env_var])
-    paths.append(os.path.expanduser('~/.' + app_name))
-    resource_dir = pkg_resources.resource_filename('hcam_finder', 'data')
+    paths.append(os.path.expanduser("~/." + app_name))
+    resource_dir = str(importlib.resources.files("hcam_finder") / "data")
     paths.append(resource_dir)
 
     # now load config file
@@ -50,21 +51,23 @@ def load_config(g, app_name='hfinder', env_var='HCAM_FINDER_CONF'):
     validator = validate.Validator()
     result = config.validate(validator)
     if result is not True:
-        g.clog.warn('Config file validation failed')
+        g.clog.warn("Config file validation failed")
 
     # now update globals with config
     g.cpars.update(config)
 
 
-def write_config(g, app_name='hfinder'):
+def write_config(g, app_name="hfinder"):
     """
     Dump application level globals to config file
     """
-    configspec_file = pkg_resources.resource_filename('hcam_finder',
-                                                      'data/configspec.ini')
+    configspec_file = str(
+        importlib.resources.files("hcam_finder") / "data/configspec.ini"
+    )
+
     config = configobj.ConfigObj({}, configspec=configspec_file)
     config.update(g.cpars)
-    config.filename = os.path.expanduser('~/.{}/config'.format(app_name))
+    config.filename = os.path.expanduser("~/.{}/config".format(app_name))
     if not os.path.exists(config.filename):
         try:
             config.write()
