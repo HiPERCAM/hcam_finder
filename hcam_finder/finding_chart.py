@@ -81,7 +81,7 @@ def make_finder_pillow(logger, fname, img_array, object_name, tel, ra, dec, pa, 
     while text_x / width < 0.4:
         font_size += 1
         font = ImageFont.truetype(font_file, font_size)
-        text_x, text_y = max((font.getbbox(txt) for txt in info_msg.splitlines()))
+        _, _, text_x, text_y = max((font.getbbox(txt) for txt in info_msg.splitlines()))
 
     nlines = len(info_msg.splitlines()) + 1
     rect_x, rect_y = int(1.1 * text_x), nlines * int(text_y)
