@@ -3,6 +3,7 @@ from __future__ import print_function, absolute_import, unicode_literals, divisi
 import pkg_resources
 import six
 from os.path import expanduser
+
 if not six.PY3:
     import tkFileDialog as filedialog
 else:
@@ -32,20 +33,27 @@ def make_finder(logger, img_array, object_name, tel, ra, dec, pa, wins):
     """
     fname = filedialog.asksaveasfilename(
         initialdir=expanduser("~"),
-        defaultextension='.jpg',
-        filetypes=[('finding charts', '.jpg')],
-        title='Name of finding chart')
+        defaultextension=".jpg",
+        filetypes=[("finding charts", ".jpg")],
+        title="Name of finding chart",
+    )
 
     if have_pillow:
-        make_finder_pillow(logger, fname, img_array, object_name, tel, ra, dec, pa, wins)
+        make_finder_pillow(
+            logger, fname, img_array, object_name, tel, ra, dec, pa, wins
+        )
     elif have_opencv:
-        make_finder_opencv(logger, fname, img_array, object_name, tel, ra, dec, pa, wins)
+        make_finder_opencv(
+            logger, fname, img_array, object_name, tel, ra, dec, pa, wins
+        )
     else:
-        logger.error(msg='Cannot make finder, please install openCV or Pillow')
+        logger.error(msg="Cannot make finder, please install openCV or Pillow")
 
 
 def make_finder_opencv(logger, fname, img_array, object_name, tel, ra, dec, pa, wins):
-    logger.error(msg="openCV finding chart saving not implemented, please install Pillow")
+    logger.error(
+        msg="openCV finding chart saving not implemented, please install Pillow"
+    )
 
 
 def make_finder_pillow(logger, fname, img_array, object_name, tel, ra, dec, pa, wins):
@@ -54,27 +62,35 @@ def make_finder_pillow(logger, fname, img_array, object_name, tel, ra, dec, pa, 
     width, height = image.size
     draw = ImageDraw.Draw(image)
     if not object_name:
-        raise ValueError('you should supply an object name')
+        raise ValueError("you should supply an object name")
 
-    info_msg = "{object_name} ({tel})\n{ra} {dec}\nPA = {pa:.1f}\n{wins:s}\nv{version}".format(
-        object_name=object_name, tel=tel, ra=ra, dec=dec, pa=pa, wins=wins, version=version
+    info_msg = (
+        "{object_name} ({tel})\n{ra} {dec}\nPA = {pa:.1f}\n{wins:s}\nv{version}".format(
+            object_name=object_name,
+            tel=tel,
+            ra=ra,
+            dec=dec,
+            pa=pa,
+            wins=wins,
+            version=version,
+        )
     )
     font_size = 5
-    font_file = pkg_resources.resource_filename('hcam_finder', 'data/Lato-Regular.ttf')
+    font_file = pkg_resources.resource_filename("hcam_finder", "data/Lato-Regular.ttf")
     text_x = 0.0
-    while text_x/width < 0.4:
+    while text_x / width < 0.4:
         font_size += 1
         font = ImageFont.truetype(font_file, font_size)
-        text_x, text_y = max((font.getsize(txt) for txt in info_msg.splitlines()))
+        text_x, text_y = max((font.getbbox(txt) for txt in info_msg.splitlines()))
 
     nlines = len(info_msg.splitlines()) + 1
-    rect_x, rect_y = int(1.1*text_x), nlines*int(text_y)
-    rectangle = Image.new('RGBA', (rect_x, rect_y), (255, 255, 255, 200))
+    rect_x, rect_y = int(1.1 * text_x), nlines * int(text_y)
+    rectangle = Image.new("RGBA", (rect_x, rect_y), (255, 255, 255, 200))
 
     width, height = image.size
     x = width - rect_x
     y = 0
     image.paste(rectangle, (x, y), rectangle)
-    x = width - 1.05*text_x
-    draw.text((x, y), info_msg, font=font, fill='rgb(255, 0, 0)')
+    x = width - 1.05 * text_x
+    draw.text((x, y), info_msg, font=font, fill="rgb(255, 0, 0)")
     image.save(fname)
