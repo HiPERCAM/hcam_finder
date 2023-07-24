@@ -30,13 +30,13 @@ scripts = [fname for fname in glob.glob(os.path.join('scripts', '*'))
 
 setup(
     name='hcam_finder',
-    version='1.2.2',
+    version='1.2.3',
     description="Observation planning and finding charts for HiPerCAM",
     long_description=readme + '\n\n' + history,
     author="Stuart Littlefair",
     author_email='s.littlefair@shef.ac.uk',
     url='https://github.com/HiPERCAM/hcam_finder',
-    download_url='https://github.com/HiPERCAM/hcam_finder/archive/v1.2.2.tar.gz',
+    download_url='https://github.com/HiPERCAM/hcam_finder/archive/v1.2.3.tar.gz',
     packages=[
         'hcam_finder',
     ],
