@@ -28,7 +28,6 @@ else:
 
 
 class HCAMFovSetter(FovSetter):
-
     overlay_names = ["ccd_overlay", "compo_overlay"]
 
     def window_string(self):
@@ -65,8 +64,9 @@ class HCAMFovSetter(FovSetter):
         data = dict()
         data["appdata"] = g.ipars.dumpJSON()
 
-        # add compo setup info
-        data["compo"] = g.compo_hw.dumpJSON()
+        # add compo setup info, if used
+        if g.ipars.compo():
+            data["compo"] = g.compo_hw.dumpJSON()
 
         # add user info that we should know of
         # includes target, user and proposal
@@ -138,7 +138,7 @@ class HCAMFovSetter(FovSetter):
 
         obj = self.canvas.get_object_by_tag("compo_overlay")
         obj.move_delta(xn - xc, yn - yc)
-        
+
         self.canvas.update_canvas()
 
     def _make_ccd(self, image):
