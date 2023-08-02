@@ -1,9 +1,14 @@
 # read in config
 from __future__ import absolute_import, print_function, division
 import configobj
-import importlib
 import os
 import validate
+
+try:
+    from importlib import resources as importlib_resources
+except Exception:
+    # backport for python 3.6
+    import importlib_resources
 
 
 def check_user_dir(g, app_name="hfinder"):
@@ -23,7 +28,7 @@ def load_config(g, app_name="hfinder", env_var="HCAM_FINDER_CONF"):
     Populate application level globals from config file
     """
     configspec_file = str(
-        importlib.resources.files("hcam_finder") / "data/configspec.ini"
+        importlib_resources.files("hcam_finder") / "data/configspec.ini"
     )
     # try and load config file.
     # look in the following locations in order
@@ -34,7 +39,7 @@ def load_config(g, app_name="hfinder", env_var="HCAM_FINDER_CONF"):
     if env_var in os.environ:
         paths.append(os.environ[env_var])
     paths.append(os.path.expanduser("~/." + app_name))
-    resource_dir = str(importlib.resources.files("hcam_finder") / "data")
+    resource_dir = str(importlib_resources.files("hcam_finder") / "data")
     paths.append(resource_dir)
 
     # now load config file
@@ -62,7 +67,7 @@ def write_config(g, app_name="hfinder"):
     Dump application level globals to config file
     """
     configspec_file = str(
-        importlib.resources.files("hcam_finder") / "data/configspec.ini"
+        importlib_resources.files("hcam_finder") / "data/configspec.ini"
     )
 
     config = configobj.ConfigObj({}, configspec=configspec_file)

@@ -1,8 +1,13 @@
 # -*- coding: utf-8 -*-
 from __future__ import print_function, absolute_import, unicode_literals, division
-import importlib
 import six
 from os.path import expanduser
+
+try:
+    from importlib import resources as importlib_resources
+except Exception:
+    # backport for python 3.6
+    import importlib_resources
 
 if not six.PY3:
     import tkFileDialog as filedialog
@@ -76,7 +81,7 @@ def make_finder_pillow(logger, fname, img_array, object_name, tel, ra, dec, pa, 
         )
     )
     font_size = 5
-    font_file = importlib.resources.files("hcam_finder") / "data/Lato-Regular.ttf"
+    font_file = importlib_resources.files("hcam_finder") / "data/Lato-Regular.ttf"
     text_x = 0.0
     while text_x / width < 0.4:
         font_size += 1
