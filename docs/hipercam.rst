@@ -105,15 +105,15 @@ reasons for this:
    is the RMS readout noise in counts (ADU) and :math:`G` is the gain
    in electrons per ADU. **For HiPERCAM this means one wants if possible
    at least 100 counts/pixel at peak**, and preferably higher than this.
-   There is a caveat to this in that if the sky counts are greater
-   than this level, then there is less to be gained since binning
-   increase the target and sky counts per pixel by the same factor,
-   but when going fast, the sky can often be quite low level
-   (especially in CCDs 1, 2 and 3, i.e.  ugr). This means it can make sense
-   sometimes to use very large binning factors when going fast and sky
-   noise is low. It is this sort of case when binning can quite dramatically
-   improve your data, and if you are not worried about spatial resolution
-   at all, 8x8 or even 16x16 binning might make sense.
+   Note this does not apply for long exposures where the sky noise
+   dominates. If the sky counts are greater than 100 counts/pixel, then 
+   there is less to be gained since binning increase the target and sky counts 
+   per pixel by the same factor, but when going fast, the sky can often be 
+   quite low level (especially in CCDs 1, 2 and 3, i.e.  ugr). This means 
+   it can make sense sometimes to use very large binning factors when going 
+   fast and sky noise is low. It is this sort of case when binning can quite 
+   dramatically improve your data, and if you are not worried about spatial 
+   resolution at all, 8x8 or even 16x16 binning might make sense.
 
 Binning has downsides of course; resolution is the obvious one. If you
 need to exploit good seeing, then you may not want to go beyond 2x2
