@@ -65,3 +65,6 @@ target/
 
 # Editor
 .vscode/
+
+# MacOS
+.DS_STore
