@@ -219,6 +219,18 @@ After transfer to the storage area, both windows have to be clocked horizontally
 of the CCD. If the windows are moved in from corners, it  is best to move them inwards an equal 
 amount, since otherwise the window on the side closest to the readout register will have wait until the other window reaches the readout register, slowing down the frame rate.
 
+Pipe-Shift
+``````````
+
+Another effect that can improve the efficiency of drift mode is choosing the y-size of the window. When the vertical height of the storage window does divide perfectly by the y-size of the windows,
+an additional number of vertical clocks, called a "pipe-shift" is introduced, so that the drift windows are evenly spaced within the storage area. It is therefore best to use window y-sizes that 
+divide evenly into the storage area height. These y-sizes are called "magic numbers". The plot below shows the fractional contribution of the pipe-shift to the total readout time,
+as a function of the window y-size. Choosing your window size to minimise this contribution will maxmise frame rate and duty cycle.
+
+.. image:: images/HiPERCAM_pshift.png
+    :alt: pipe shift contribution
+    :align: center
+
 Details 
 ```````
 
