@@ -87,7 +87,7 @@ parse==1.19.1
     #   parse-type
 parse-type==0.6.2
     # via behave
-pillow==10.0.0
+pillow==10.0.1
     # via
     #   ginga
     #   hcam-finder (setup.py)
