@@ -38,7 +38,7 @@ contextlib2==21.6.0
     # via schema
 contourpy==1.1.0
     # via matplotlib
-cryptography==41.0.3
+cryptography==41.0.6
     # via autobahn
 cycler==0.11.0
     # via matplotlib
