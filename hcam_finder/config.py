@@ -27,9 +27,15 @@ def load_config(g, app_name="hfinder", env_var="HCAM_FINDER_CONF"):
     """
     Populate application level globals from config file
     """
-    configspec_file = str(
-        importlib_resources.files("hcam_finder") / "data/configspec.ini"
-    )
+    try:
+        configspec_file = str(
+            importlib_resources.files("hcam_finder") / "data/configspec.ini"
+        )
+    except AttributeError:
+        # backport for Python <P3.9
+        load_config_legacy(g)
+        return
+
     # try and load config file.
     # look in the following locations in order
     # - HCAM_FINDER_CONF environment variable
@@ -66,9 +72,17 @@ def write_config(g, app_name="hfinder"):
     """
     Dump application level globals to config file
     """
-    configspec_file = str(
-        importlib_resources.files("hcam_finder") / "data/configspec.ini"
-    )
+    try:
+        configspec_file = str(
+            importlib_resources.files("hcam_finder") / "data/configspec.ini"
+        )
+    except AttributeError:
+        # backport for Python <P3.9
+        import pkg_resources
+
+        configspec_file = pkg_resources.resource_filename(
+            "hcam_finder", "data/configspec.ini"
+        )
 
     config = configobj.ConfigObj({}, configspec=configspec_file)
     config.update(g.cpars)
@@ -78,3 +92,45 @@ def write_config(g, app_name="hfinder"):
             config.write()
         except Exception as err:
             g.clog.warn("Could not write config file:\n" + str(err))
+
+
+def load_config_legacy(g, app_name="hfinder", env_var="HCAM_FINDER_CONF"):
+    """
+    Populate application level globals from config file
+    """
+    import pkg_resources
+
+    configspec_file = pkg_resources.resource_filename(
+        "hcam_finder", "data/configspec.ini"
+    )
+
+    # try and load config file.
+    # look in the following locations in order
+    # - HCAM_FINDER_CONF environment variable
+    # - ~/.hfinder directory
+    # - package resources
+    paths = []
+    if env_var in os.environ:
+        paths.append(os.environ[env_var])
+    paths.append(os.path.expanduser("~/." + app_name))
+    resource_dir = pkg_resources.resource_filename("hcam_finder", "data")
+    paths.append(resource_dir)
+
+    # now load config file
+    config = configobj.ConfigObj({}, configspec=configspec_file)
+    for loc in paths:
+        try:
+            with open(os.path.join(loc, "config")) as source:
+                config = configobj.ConfigObj(source, configspec=configspec_file)
+            break
+        except IOError:
+            pass
+
+    # validate ConfigObj, filling defaults from configspec if missing from config file
+    validator = validate.Validator()
+    result = config.validate(validator)
+    if result is not True:
+        g.clog.warn("Config file validation failed")
+
+    # now update globals with config
+    g.cpars.update(config)

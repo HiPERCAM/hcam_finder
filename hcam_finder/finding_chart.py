@@ -81,7 +81,16 @@ def make_finder_pillow(logger, fname, img_array, object_name, tel, ra, dec, pa, 
         )
     )
     font_size = 5
-    font_file = importlib_resources.files("hcam_finder") / "data/Lato-Regular.ttf"
+    try:
+        font_file = importlib_resources.files("hcam_finder") / "data/Lato-Regular.ttf"
+    except AttributeError:
+        # backport for Python <P3.9
+        import pkg_resources
+
+        font_file = pkg_resources.resource_filename(
+            "hcam_finder", "data/Lato-Regular.ttf"
+        )
+
     text_x = 0.0
     while text_x / width < 0.4:
         font_size += 1
