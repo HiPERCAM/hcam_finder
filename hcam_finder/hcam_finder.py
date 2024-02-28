@@ -288,7 +288,7 @@ class HCAMFovSetter(FovSetter):
             self.canvas.delete_object_by_tag("ccd_overlay")
             self.canvas.add(obj, tag="ccd_overlay", redraw=False)
             # rotate
-            obj.rotate(pa, self.ctr_x, self.ctr_y)
+            obj.rotate_deg([pa], (self.ctr_x, self.ctr_y))
             obj.color = "red"
 
             # save old values so we don't have to recompute FOV if we're just moving
@@ -306,7 +306,7 @@ class HCAMFovSetter(FovSetter):
                 self.canvas.delete_object_by_tag("compo_overlay")
                 self.canvas.add(obj, tag="compo_overlay", redraw=False)
                 # rotate
-                obj.rotate(pa, self.ctr_x, self.ctr_y)
+                obj.rotate_deg([pa], (self.ctr_x, self.ctr_y))
             else:
                 self.canvas.delete_object_by_tag("compo_overlay")
         except Exception as err:

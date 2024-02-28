@@ -241,7 +241,7 @@ class FovSetter(tk.LabelFrame):
 
         # Add our image servers
         self.bank = catalog.ServerBank(self.logger)
-        for (longname, shortname, klass, url, description) in image_archives:
+        for longname, shortname, klass, url, description in image_archives:
             obj = klass(self.logger, longname, shortname, url, description)
             self.bank.add_image_server(obj)
         self.tmpdir = tempfile.mkdtemp()
@@ -313,7 +313,7 @@ class FovSetter(tk.LabelFrame):
         canvas, event, x, y = args
         try:
             obj = self.canvas.get_object_by_tag("ccd_overlay")
-            self.currently_moving_fov = obj.contains(x, y)
+            self.currently_moving_fov = obj.contains_pt((x, y))
             if self.currently_moving_fov:
                 self.ref_pos_x = x
                 self.ref_pos_y = y
@@ -430,7 +430,7 @@ class FovSetter(tk.LabelFrame):
                 pa *= -1
             for obj in objs:
                 if obj is not None:
-                    obj.rotate(pa - self.pa_as_drawn, self.ctr_x, self.ctr_y)
+                    obj.rotate_deg([pa - self.pa_as_drawn], (self.ctr_x, self.ctr_y))
             self.canvas.update_canvas()
             self.pa_as_drawn = pa
         except Exception:
@@ -516,7 +516,7 @@ class FovSetter(tk.LabelFrame):
             self.canvas.delete_object_by_tag("ccd_overlay")
             self.canvas.add(obj, tag="ccd_overlay", redraw=False)
             # rotate
-            obj.rotate(pa, self.ctr_x, self.ctr_y)
+            obj.rotate_deg([pa], (self.ctr_x, self.ctr_y))
             obj.color = "red"
 
             # save old values so we don't have to recompute FOV if we're just moving
