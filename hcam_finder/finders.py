@@ -272,21 +272,48 @@ class FovSetter(tk.LabelFrame):
             if all(decimals):
                 ret_val = True
         return ret_val
+    
+    def drawMarker(self, sky_coords, color, tag="Target"):
+        g = get_root(self).globals
 
+        image = self.fitsimage.get_image()
+        # 3 arcsecond radius target marker
+        x, y = image.radectopix(sky_coords.ra.deg, sky_coords.dec.deg)
+        size = wcs.calc_radius_xy(image, x, y, 3 / 3600)
+        circ = Circle(x, y, size, fill=True, linewidth=3, color=color, fillalpha=0.3)
+        
+        self.canvas.delete_object_by_tag(tag)
+        self.canvas.add(circ, tag=tag, redraw=True)
+        
     def targetMarker(self):
         g = get_root(self).globals
         if self.have_decimal_coords():
             coo = SkyCoord(self.targCoords.value(), unit=u.deg)
         else:
             coo = SkyCoord(self.targCoords.value(), unit=(u.hour, u.deg))
-        image = self.fitsimage.get_image()
+        self.drawMarker(coo, color="blue")
 
-        # 3 arcsecond radius target marker
-        x, y = image.radectopix(coo.ra.deg, coo.dec.deg)
-        size = wcs.calc_radius_xy(image, x, y, 3 / 3600)
-        circ = Circle(x, y, size, fill=True, linewidth=3, color="blue", fillalpha=0.3)
-        self.canvas.delete_object_by_tag("Target")
-        self.canvas.add(circ, tag="Target", redraw=True)
+    def xp_markers(self, cone_radius=11*u.arcmin, min_target_radius=3*u.arcsec):
+        from astroquery.gaia import Gaia
+        Gaia.ROW_LIMIT = -1
+        g = get_root(self).globals
+        if self.have_decimal_coords():
+            coo = SkyCoord(self.targCoords.value(), unit=u.deg)
+        else:
+            coo = SkyCoord(self.targCoords.value(), unit=(u.hour, u.deg))
+
+        current_tags = self.canvas.get_tags()
+        for current_tag in current_tags:
+            if current_tag.isdigit():
+                self.canvas.delete_object_by_tag(current_tag)
+        results_table = Gaia.cone_search(coo, radius=cone_radius).get_results()
+        xp_spectra_sources = results_table['SOURCE_ID', 'ra', 'dec'][results_table['has_xp_continuous']]
+        for id, ra, dec in xp_spectra_sources:
+            coord = SkyCoord(ra, dec, unit=(u.deg, u.deg))
+            if coord.separation(coo) < min_target_radius:
+                continue
+            self.drawMarker(coord, color='red', tag=str(id))
+
 
     def window_string(self):
         raise NotImplementedError
@@ -581,6 +608,8 @@ class FovSetter(tk.LabelFrame):
             else:
                 self.draw_ccd()
                 self.targetMarker()
+                if has_astroquery:
+                    self.xp_markers()
             finally:
                 self.fitsimage.onscreen_message(None)
 
