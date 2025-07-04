@@ -71,7 +71,9 @@ image_archives.extend(
 )
 
 catalog_archives = [
-    ("Gaia", "XP continuous")
+    ("Null", "No catalog", "no_catalog"),
+    ("Gaia", "XP continuous", "has_xp_continuous"),
+    ("Gaia", "XP sampled", "has_xp_sampled")
 ]
 
 
@@ -316,7 +318,11 @@ class FovSetter(tk.LabelFrame):
             coo = SkyCoord(self.targCoords.value(), unit=(u.hour, u.deg))
         self.drawMarker(coo, color="blue")
 
-    def xp_markers(self, cone_radius=11*u.arcmin, min_target_radius=3*u.arcsec):
+    def xp_markers(self, catalog, cone_radius=11*u.arcmin, min_target_radius=3*u.arcsec):
+        catalog_dict = {
+            "XP continuous": "has_xp_continuous",
+            "XP sampled": "has_xp_sampled"
+        }
         from astroquery.gaia import Gaia
         Gaia.ROW_LIMIT = -1
         g = get_root(self).globals
@@ -329,14 +335,15 @@ class FovSetter(tk.LabelFrame):
         for current_tag in current_tags:
             if current_tag.isdigit():
                 self.canvas.delete_object_by_tag(current_tag)
-        results_table = Gaia.cone_search(coo, radius=cone_radius).get_results()
+        if catalog != "No catalog":
+            results_table = Gaia.cone_search(coo, radius=cone_radius).get_results()
 
-        xp_spectra_sources = results_table['source_id', 'ra', 'dec'][results_table['has_xp_continuous']]
-        for id, ra, dec in xp_spectra_sources:
-            coord = SkyCoord(ra, dec, unit=(u.deg, u.deg))
-            if coord.separation(coo) < min_target_radius:
-                continue
-            self.drawMarker(coord, color='red', tag=str(id))
+            xp_spectra_sources = results_table['source_id', 'ra', 'dec'][results_table[catalog_dict[catalog]]]
+            for id, ra, dec in xp_spectra_sources:
+                coord = SkyCoord(ra, dec, unit=(u.deg, u.deg))
+                if coord.separation(coo) < min_target_radius:
+                    continue
+                self.drawMarker(coord, color='red', tag=str(id))
 
 
     def window_string(self):
@@ -611,7 +618,8 @@ class FovSetter(tk.LabelFrame):
         self.ra.set(coo.ra.deg)
         self.dec.set(coo.dec.deg)
         # self.load_image()
-        self.xp_markers()
+        
+        self.xp_markers(catalog=self.catalogSelect.value())
 
 
     def load_image(self):
