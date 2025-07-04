@@ -70,6 +70,10 @@ image_archives.extend(
     ]
 )
 
+catalog_archives = [
+    ("Gaia", "XP continuous")
+]
+
 
 @u.quantity_input(px_val=u.pix)
 @u.quantity_input(px_scale=u.arcsec / u.pix)
@@ -206,6 +210,12 @@ class FovSetter(tk.LabelFrame):
         )
         self.pa.grid(row=row, column=column, sticky=tk.W)
 
+        if has_astroquery:
+            row += 1
+            catalogList = [archive[1] for archive in catalog_archives]
+            self.catalogSelect = w.Choice(self, catalogList, width=20)
+            self.catalogSelect.grid(row=row, column=column, sticky=tk.W)
+
         column += 1
         row = 0
         self.query = tk.Button(
@@ -228,6 +238,19 @@ class FovSetter(tk.LabelFrame):
             command=self.set_and_load,
         )
         self.launchButton.grid(row=row, column=column, sticky=tk.W)
+
+        if has_astroquery:
+            row += 4
+            self.loadCatalogButton = tk.Button(
+                self,
+                width=14,
+                fg="black",
+                bg=g.COL["main"],
+                text="Load Catalog",
+                command=self.set_and_load_catalog,
+            )
+            self.loadCatalogButton.grid(row=row, column=column, sticky=tk.W)
+
 
         self.imfilepath = None
         self.logger = logger
@@ -307,7 +330,8 @@ class FovSetter(tk.LabelFrame):
             if current_tag.isdigit():
                 self.canvas.delete_object_by_tag(current_tag)
         results_table = Gaia.cone_search(coo, radius=cone_radius).get_results()
-        xp_spectra_sources = results_table['SOURCE_ID', 'ra', 'dec'][results_table['has_xp_continuous']]
+
+        xp_spectra_sources = results_table['source_id', 'ra', 'dec'][results_table['has_xp_continuous']]
         for id, ra, dec in xp_spectra_sources:
             coord = SkyCoord(ra, dec, unit=(u.deg, u.deg))
             if coord.separation(coo) < min_target_radius:
@@ -578,6 +602,18 @@ class FovSetter(tk.LabelFrame):
         self.dec.set(coo.dec.deg)
         self.load_image()
 
+    
+    def set_and_load_catalog(self):
+        if self.have_decimal_coords():
+            coo = SkyCoord(self.targCoords.value(), unit=u.deg)
+        else:
+            coo = SkyCoord(self.targCoords.value(), unit=(u.hour, u.deg))
+        self.ra.set(coo.ra.deg)
+        self.dec.set(coo.dec.deg)
+        # self.load_image()
+        self.xp_markers()
+
+
     def load_image(self):
         self.fitsimage.onscreen_message("Getting image; please wait...")
         # offload to non-GUI thread to keep viewer somewhat responsive?
@@ -608,8 +644,6 @@ class FovSetter(tk.LabelFrame):
             else:
                 self.draw_ccd()
                 self.targetMarker()
-                if has_astroquery:
-                    self.xp_markers()
             finally:
                 self.fitsimage.onscreen_message(None)
 
