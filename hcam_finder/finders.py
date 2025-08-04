@@ -650,6 +650,10 @@ class FovSetter(tk.LabelFrame):
                 self.logger.error(msg=errmsg)
                 self.fitsimage.onscreen_message(errmsg)
             else:
+                current_tags = self.canvas.get_tags()
+                for current_tag in current_tags:
+                    if current_tag.isdigit():
+                        self.canvas.delete_object_by_tag(current_tag)
                 self.draw_ccd()
                 self.targetMarker()
             finally:
