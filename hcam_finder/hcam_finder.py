@@ -80,7 +80,7 @@ class HCAMFovSetter(FovSetter):
         if self.have_decimal_coords():
             targ_coord = SkyCoord(self.targCoords.value(), unit=(u.deg, u.deg))
         else:
-            targ_coord = SkyCoord(self.targCoords.value(), unit=(u.hourangle, u.deg))
+            targ_coord = SkyCoord(self.targCoords.value(), unit=(u.hour, u.deg))
         target["TARG_RA"] = targ_coord.ra.to_string(
             sep=":", unit=u.hour, pad=True, precision=2
         )
