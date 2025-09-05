@@ -34,13 +34,13 @@ scripts = [
 
 setup(
     name="hcam_finder",
-    version="1.3.8",
+    version="1.3.9",
     description="Observation planning and finding charts for HiPerCAM",
     long_description=readme + "\n\n" + history,
     author="Stuart Littlefair",
     author_email="s.littlefair@shef.ac.uk",
     url="https://github.com/HiPERCAM/hcam_finder",
-    download_url="https://github.com/HiPERCAM/hcam_finder/archive/v1.3.8.tar.gz",
+    download_url="https://github.com/HiPERCAM/hcam_finder/archive/v1.3.9.tar.gz",
     packages=[
         "hcam_finder",
     ],
