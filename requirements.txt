@@ -4,4 +4,4 @@ astropy
 pillow
 configobj
 scipy
-hcam_widgets
+hcam_widgets >= 1.2.1

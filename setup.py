@@ -1,9 +1,10 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-from setuptools import setup
 import glob
 import os
+
+from setuptools import setup
 
 with open("README.rst") as readme_file:
     readme = readme_file.read()
@@ -17,7 +18,7 @@ requirements = [
     "six",
     "pillow",
     "configobj",
-    "hcam_widgets>=1.1.3",
+    "hcam_widgets>=1.2.1",
 ]
 
 test_requirements = [
