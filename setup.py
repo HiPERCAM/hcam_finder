@@ -18,7 +18,7 @@ requirements = [
     "six",
     "pillow",
     "configobj",
-    "hcam_widgets>=1.2.1",
+    "hcam_widgets>=1.2.2",
 ]
 
 test_requirements = [

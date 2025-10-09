@@ -1,25 +1,24 @@
 # -*- coding: utf-8 -*-
-from __future__ import print_function, absolute_import, unicode_literals, division
+from __future__ import absolute_import, division, print_function, unicode_literals
+
+import os
+import re
 import tempfile
 import threading
-import os
-import six
-import re
 
+import hcam_widgets.widgets as w
 import numpy as np
-from ginga.util import catalog, dp, wcs
-from ginga.canvas.types.all import Circle
+import six
 from astropy import units as u
 from astropy.coordinates import SkyCoord
 from astropy.coordinates.name_resolve import NameResolveError
-
-import hcam_widgets.widgets as w
+from ginga.canvas.types.all import Circle
+from ginga.util import catalog, dp, wcs
 from hcam_widgets.tkutils import get_root
 
 from .finding_chart import make_finder
-from .shapes import CCDWin
-
 from .panstarrs import PS1ImageServer
+from .shapes import CCDWin
 from .ztf import ZTFImageServer
 
 has_astroquery = True
@@ -110,7 +109,7 @@ class TelChooser(tk.Menu):
         self.val = tk.StringVar()
         tel = g.cpars.get("telins_name", list(g.TINS)[0])
         self.val.set(tel)
-        self.val.trace("w", self._change)
+        self.val.trace_add("write", self._change)
         for tel_name in g.TINS.keys():
             self.add_radiobutton(label=tel_name, value=tel_name, variable=self.val)
         self.args = args
@@ -125,7 +124,6 @@ class TelChooser(tk.Menu):
 
 
 class FovSetter(tk.LabelFrame):
-
     overlay_names = ["ccd_overlay"]
 
     def __init__(self, master, fitsimage, logger):

@@ -3,37 +3,36 @@
 # This is open-source software licensed under a BSD license.
 # Please see the file LICENSE.txt for details.
 #
-from __future__ import print_function, absolute_import, unicode_literals, division
+from __future__ import absolute_import, division, print_function, unicode_literals
 
 import logging
 from functools import partial
-import six
-from packaging.version import parse
 
 import ginga
-from ginga import AstroImage
-from ginga import imap
+import six
+from ginga import AstroImage, imap
+from packaging.version import parse
 
 try:
     from ginga.tkw.ImageViewTk import ImageViewCanvas as CanvasView
 except ImportError:
     from ginga.tkw.ImageViewTk import CanvasView
-from ginga.canvas.types.astro import Compass
-from twisted.internet.defer import inlineCallbacks, returnValue
 
 import hcam_widgets.tkutils as tkutils
-from hcam_widgets.globals import Container
 import hcam_widgets.widgets as w
+from ginga.canvas.types.astro import Compass
 from hcam_widgets import hcam
 from hcam_widgets.compo import widgets as compo_widgets
+from hcam_widgets.globals import Container
+from twisted.internet.defer import inlineCallbacks, returnValue
 
-from hcam_finder.config import load_config, write_config, check_user_dir
 from hcam_finder import HCAMFovSetter
+from hcam_finder.config import check_user_dir, load_config, write_config
 from hcam_finder.finders import TelChooser
 
 if not six.PY3:
-    import Tkinter as tk
     import tkFileDialog as filedialog
+    import Tkinter as tk
 else:
     import tkinter as tk
     from tkinter import filedialog
@@ -234,9 +233,9 @@ class FitsViewer(tk.Tk):
         for widget in widgets_to_fix:
             widget.checker = new_check
         # radio buttons
-        widgets_to_fix[0].val.trace("w", new_check)
-        widgets_to_fix[-1].val.trace("w", new_check)
-        widgets_to_fix[-2].val.trace("w", new_check)
+        widgets_to_fix[0].val.trace_add("write", new_check)
+        widgets_to_fix[-1].val.trace_add("write", new_check)
+        widgets_to_fix[-2].val.trace_add("write", new_check)
 
         # now layout
         self.target.grid(row=0, column=0, sticky=tk.W + tk.N, padx=10, pady=3)
