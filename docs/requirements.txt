@@ -42,7 +42,7 @@ cryptography==41.0.3
     # via autobahn
 cycler==0.11.0
     # via matplotlib
-fonttools==4.42.0
+fonttools==4.43.0
     # via matplotlib
 ginga==4.1.0
     # via hcam-finder (setup.py)
