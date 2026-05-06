@@ -21,10 +21,10 @@ except ImportError:
 import hcam_widgets.tkutils as tkutils
 import hcam_widgets.widgets as w
 from ginga.canvas.types.astro import Compass
-from hcam_widgets import hcam
-from hcam_widgets.compo import widgets as compo_widgets
+from hcam_widgets.hipercam import widgets as hcam_widgets
+from hcam_widgets.hipercam.compo import widgets as compo_widgets
 from hcam_widgets.globals import Container
-from twisted.internet.defer import inlineCallbacks, returnValue
+from twisted.internet.defer import inlineCallbacks
 
 from hcam_finder import HCAMFovSetter
 from hcam_finder.config import check_user_dir, load_config, write_config
@@ -108,14 +108,14 @@ class FitsViewer(tk.Tk):
 
         # This one is actually displayed!
         # Instrument params
-        self.globals.ipars = hcam.InstPars(self)
+        self.globals.ipars = hcam_widgets.InstPars(self)
 
-        self.globals.rpars = hcam.RunPars(self)
-        self.globals.info = w.InfoFrame(self)
-        self.globals.observe = hcam.Observe(self)
+        self.globals.rpars = hcam_widgets.RunPars(self)
+        self.globals.info = hcam_widgets.InfoFrame(self)
+        self.globals.observe = hcam_widgets.Observe(self)
 
         # counts and S/N frame. Also displayed!
-        self.globals.count = hcam.CountsFrame(self)
+        self.globals.count = hcam_widgets.CountsFrame(self)
 
         # COMPO HW control widget. Not shown initially, but raised when COMPO used
         self.globals.compo_hw = compo_widgets.COMPOSetupWidget(self)
@@ -228,7 +228,7 @@ class FitsViewer(tk.Tk):
             else:
                 # enable saving JSON
                 self.menubar.entryconfig("Save", state="normal")
-            returnValue(result)
+            return result
 
         for widget in widgets_to_fix:
             widget.checker = new_check

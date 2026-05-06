@@ -22,8 +22,8 @@ import hcam_widgets.tkutils as tkutils
 import hcam_widgets.widgets as w
 from ginga.canvas.types.astro import Compass
 from hcam_widgets.globals import Container
-from hcam_widgets.uspec import CountsFrame, InstPars
-from twisted.internet.defer import inlineCallbacks, returnValue
+from hcam_widgets.ultraspec.widgets import CountsFrame, InstPars
+from twisted.internet.defer import inlineCallbacks
 
 from hcam_finder.config import check_user_dir, load_config, write_config
 from hcam_finder.finders import TelChooser
@@ -205,7 +205,7 @@ class FitsViewer(tk.Tk):
             else:
                 # enable saving JSON
                 self.menubar.entryconfig("Save", state="normal")
-            returnValue(result)
+            return result
 
         for widget in widgets_to_fix:
             widget.checker = new_check

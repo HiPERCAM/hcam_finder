@@ -5,7 +5,7 @@ from ginga.util import wcs
 from ginga.canvas.types.all import Polygon, Path
 from ginga.util.bezier import get_bezier
 
-from hcam_widgets.compo.utils import field_stop_centre, gtc_focalplane_equivalencies
+from hcam_widgets.hipercam.compo.utils import field_stop_centre, gtc_focalplane_equivalencies
 
 
 class CCDWin(Polygon):

@@ -10,7 +10,7 @@ from ginga.canvas.types.all import Line, CompoundObject
 from astropy import units as u
 from astropy.coordinates import SkyCoord
 
-from hcam_widgets.compo.utils import (
+from hcam_widgets.hipercam.compo.utils import (
     InjectionArm,
     PickoffArm,
     INJECTOR_THETA,
