@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "hcam_finder"
-version = "1.3.10"
+version = "1.4.0"
 description = "Observation planning and finding charts for HiPerCAM"
 readme = {file = "README.rst", content-type = "text/x-rst"}
 authors = [
