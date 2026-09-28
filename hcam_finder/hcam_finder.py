@@ -1,20 +1,20 @@
 # -*- coding: utf-8 -*-
-from __future__ import print_function, absolute_import, unicode_literals, division
-import six
-from os.path import expanduser
-import json
-import itertools
+from __future__ import absolute_import, division, print_function, unicode_literals
 
-from ginga.util import wcs
-from ginga.canvas.types.all import Line, CompoundObject
+import itertools
+import json
+from os.path import expanduser
+
+import six
 from astropy import units as u
 from astropy.coordinates import SkyCoord
-
+from ginga.canvas.types.all import CompoundObject, Line
+from ginga.util import wcs
 from hcam_widgets.compo.utils import (
-    InjectionArm,
-    PickoffArm,
     INJECTOR_THETA,
     PARK_POSITION,
+    InjectionArm,
+    PickoffArm,
 )
 from hcam_widgets.tkutils import get_root
 
@@ -136,11 +136,13 @@ class HCAMFovSetter(FovSetter):
         # update latest dither centre
         self.ra_as_drawn, self.dec_as_drawn = ra, dec
 
-        obj = self.canvas.get_object_by_tag("ccd_overlay")
-        obj.move_delta(xn - xc, yn - yc)
+        overlay = self.canvas.get_object_by_tag("ccd_overlay")
+        for obj in overlay.objects:
+            obj.move_delta(xn - xc, yn - yc)
 
-        obj = self.canvas.get_object_by_tag("compo_overlay")
-        obj.move_delta(xn - xc, yn - yc)
+        overlay = self.canvas.get_object_by_tag("compo_overlay")
+        for obj in overlay.objects:
+            obj.move_delta(xn - xc, yn - yc)
 
         self.canvas.update_canvas()
 
