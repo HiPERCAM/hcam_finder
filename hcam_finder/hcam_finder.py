@@ -136,13 +136,15 @@ class HCAMFovSetter(FovSetter):
         # update latest dither centre
         self.ra_as_drawn, self.dec_as_drawn = ra, dec
 
-        overlay = self.canvas.get_object_by_tag("ccd_overlay")
-        for obj in overlay.objects:
-            obj.move_delta(xn - xc, yn - yc)
+        obj = self.canvas.get_object_by_tag("ccd_overlay")
+        obj.move_delta_pt((xn - xc, yn - yc))
 
-        overlay = self.canvas.get_object_by_tag("compo_overlay")
-        for obj in overlay.objects:
-            obj.move_delta(xn - xc, yn - yc)
+        try:
+            obj = self.canvas.get_object_by_tag("compo_overlay")
+        except KeyError:
+            pass
+        else:
+            obj.move_delta_pt((xn - xc, yn - yc))
 
         self.canvas.update_canvas()
 
